@@ -1,0 +1,6 @@
+# @package _global_
+
+
+vima_bench_kwargs:
+  task_name: "rearrange_then_restore"
+  task_kwargs: null

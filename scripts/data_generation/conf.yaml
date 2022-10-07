@@ -1,0 +1,15 @@
+task_selection: null
+modalities: ["rgb", "segm"]
+num_episodes_per_task: 50000
+success_only: true
+save_path: ???
+parallel: true
+seed: 0
+num_save_digits: 6
+
+hydra:
+  job:
+    chdir: true
+  run:
+    dir: .
+  output_subdir: null

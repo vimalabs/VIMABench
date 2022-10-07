@@ -1,0 +1,11 @@
+# ====== constraint_satisfaction ======
+sweep_without_touching:
+
+# ====== novel_concept_grounding ======
+novel_adj_and_noun:
+
+# ====== one_shot_imitation ======
+follow_motion:
+
+# ====== require_reasoning ======
+same_texture:

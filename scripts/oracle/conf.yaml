@@ -1,0 +1,18 @@
+defaults:
+  - _self_  # all below configs will override this conf.yaml
+  - task: visual_manipulation
+
+vima_bench_kwargs:
+  task_name: ???
+  task_kwargs: ???
+  modalities: ["rgb", "segm"]
+  seed: 42
+  debug: false
+  display_debug_window: true
+  render_prompt: true
+  hide_arm_rgb: false
+
+hydra:
+  run:
+    dir: .
+  output_subdir: null

@@ -1,0 +1,200 @@
+color_set_1:
+  - red
+  - green
+  - yellow
+  - granite
+  - polka dot
+  - tiger
+  - rainbow
+  - red and yellow stripe
+  - yellow and green stripe
+  - red and yellow polka dot
+  - red and green polka dot
+  - red and blue polka dot
+  - yellow and blue polka dot
+  - green and blue polka dot
+  - red swirl
+  - green swirl
+  - red paisley
+  - yellow paisley
+  - green paisley
+
+color_set_2:
+  - blue
+  - purple
+  - cyan
+  - olive
+  - tiles
+  - wooden
+  - plastic
+  - checkerboard
+  - red and blue stripe
+  - yellow and blue stripe
+  - red and purple stripe
+  - yellow and purple stripe
+  - green and purple stripe
+  - blue and purple stripe
+  - yellow and purple polka dot
+  - green and purple polka dot
+  - blue and purple polka dot
+  - purple swirl
+  - blue swirl
+  - blue paisley
+
+color_set_1_with_dark_variants:
+  - red
+  - green
+  - yellow
+  - dark red
+  - dark green
+  - dark yellow
+  - red and yellow stripe
+  - yellow and green stripe
+  - red and yellow polka dot
+  - red and green polka dot
+  - red and blue polka dot
+  - yellow and blue polka dot
+  - green and blue polka dot
+  - red swirl
+  - green swirl
+  - dark red and yellow stripe
+  - dark yellow and green stripe
+  - dark red and yellow polka dot
+  - dark red and green polka dot
+  - dark red and blue polka dot
+  - dark yellow and blue polka dot
+  - dark green and blue polka dot
+  - dark red swirl
+  - dark green swirl
+
+dragged_obj:
+  - letter A
+  - letter E
+  - letter G
+  - letter M
+  - letter T
+  - letter V
+  - block
+  - cross
+  - triangle
+  - flower
+  - heart
+  - ring
+  - pentagon
+  - L-shaped block
+
+dragged_obj_asymmetric:
+  - letter A
+  - letter E
+  - letter G
+  - letter M
+  - letter T
+  - letter V
+  - heart
+  - L-shaped block
+
+base_obj:
+  - bowl
+  - frame
+  - container
+  - square
+
+# ====== constraint_satisfaction ======
+sweep_without_exceeding:
+  possible_dragged_obj_texture: ${color_set_1}
+  possible_base_obj_texture: ${color_set_2}
+
+# ====== instruction_following ======
+rotate:
+  possible_dragged_obj: ${dragged_obj_asymmetric}
+  possible_dragged_obj_texture: ${color_set_1}
+
+scene_understanding:
+  possible_dragged_obj: ${dragged_obj}
+  possible_base_obj: ${base_obj}
+  possible_dragged_obj_texture: ${color_set_1}
+  possible_base_obj_texture: ${color_set_2}
+
+visual_manipulation:
+  possible_dragged_obj: ${dragged_obj}
+  possible_base_obj: ${base_obj}
+  possible_dragged_obj_texture: ${color_set_1}
+  possible_base_obj_texture: ${color_set_2}
+
+# ====== novel_concept_grounding ======
+twist:
+  possible_dragged_obj: ${dragged_obj_asymmetric}
+  possible_dragged_obj_texture: ${color_set_1}
+
+novel_adj:
+  possible_dragged_obj:  # exclude block due to height scaling
+    - letter A
+    - letter E
+    - letter G
+    - letter M
+    - letter T
+    - letter V
+    - cross
+    - triangle
+    - flower
+    - heart
+    - ring
+    - pentagon
+    - L-shaped block
+  possible_base_obj: ${base_obj}
+  possible_dragged_obj_texture: ${color_set_1_with_dark_variants}
+  possible_base_obj_texture: ${color_set_2}
+
+novel_noun:
+  possible_dragged_obj: ${dragged_obj}
+  possible_base_obj: ${base_obj}
+  possible_dragged_obj_texture: ${color_set_1}
+  possible_base_obj_texture: ${color_set_2}
+
+# ====== one_shot_imitation ======
+follow_order:
+  possible_dragged_obj: ${dragged_obj}
+  possible_dragged_obj_texture: ${color_set_1}
+
+# ====== rearrangement ======
+rearrange:
+  possible_dragged_obj: ${dragged_obj}
+  possible_dragged_obj_texture: ${color_set_1}
+
+# ====== require_memory ======
+manipulate_old_neighbor:
+  possible_dragged_obj: ${dragged_obj}
+  possible_base_obj: ${base_obj}
+  possible_dragged_obj_texture: ${color_set_1}
+  possible_base_obj_texture: ${color_set_2}
+
+pick_in_order_then_restore:
+  possible_dragged_obj: ${dragged_obj}
+  possible_base_obj: ${base_obj}
+  possible_dragged_obj_texture: ${color_set_1}
+  possible_base_obj_texture: ${color_set_2}
+
+rearrange_then_restore:
+  possible_dragged_obj: ${dragged_obj}
+  possible_dragged_obj_texture: ${color_set_1}
+
+# ====== require_reasoning ======
+same_shape:
+  possible_dragged_obj:
+    - shorter block   # only one shared square-like obj
+    - letter A
+    - letter E
+    - letter G
+    - letter M
+    - letter T
+    - letter V
+    - cross
+    - triangle
+    - flower
+    - heart
+    - ring
+    - pentagon
+    - L-shaped block
+  possible_base_obj: ${base_obj}
+  possible_dragged_obj_texture: ${color_set_1}
+  possible_base_obj_texture: ${color_set_2}

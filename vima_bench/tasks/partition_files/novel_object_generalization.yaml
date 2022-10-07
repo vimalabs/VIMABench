@@ -1,0 +1,69 @@
+dragged_obj:
+  - letter R
+  - diamond
+  - hexagon
+  - round
+  - star
+
+dragged_obj_asymmetric:
+  - letter R
+
+base_obj:
+  - pallet
+  - pan
+
+# ====== instruction_following ======
+rotate:
+  possible_dragged_obj: ${dragged_obj_asymmetric}
+
+scene_understanding:
+  possible_dragged_obj: ${dragged_obj}
+  possible_base_obj: ${base_obj}
+
+visual_manipulation:
+  possible_dragged_obj: ${dragged_obj}
+  possible_base_obj: ${base_obj}
+
+# ====== novel_concept_grounding ======
+twist:
+  possible_dragged_obj: ${dragged_obj_asymmetric}
+
+novel_adj:
+  possible_dragged_obj: ${dragged_obj}
+  possible_base_obj: ${base_obj}
+
+novel_noun:
+  possible_dragged_obj: ${dragged_obj}
+  possible_base_obj: ${base_obj}
+
+# ====== one_shot_imitation ======
+follow_order:
+  possible_dragged_obj: ${dragged_obj}
+
+# ====== rearrangement ======
+rearrange:
+  possible_dragged_obj: ${dragged_obj}
+
+# ====== require_memory ======
+manipulate_old_neighbor:
+  possible_dragged_obj: ${dragged_obj}
+  possible_base_obj: ${base_obj}
+
+pick_in_order_then_restore:
+  possible_dragged_obj: ${dragged_obj}
+  possible_base_obj:
+    - pallet
+
+rearrange_then_restore:
+  possible_dragged_obj: ${dragged_obj}
+
+# ====== require_reasoning ======
+same_shape:
+  possible_dragged_obj:
+    - shorter block   # only one shared square-like obj
+    - letter R
+    - diamond
+    - hexagon
+    - round
+    - star
+  possible_base_obj: ${base_obj}

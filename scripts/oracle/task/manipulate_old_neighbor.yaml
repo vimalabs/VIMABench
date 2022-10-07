@@ -1,0 +1,6 @@
+# @package _global_
+
+
+vima_bench_kwargs:
+  task_name: "manipulate_old_neighbor"
+  task_kwargs: null
