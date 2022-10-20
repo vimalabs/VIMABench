@@ -81,6 +81,19 @@ Note that different evaluation level (partition) has different tasks. See our [p
 
 <img src="images/eval_protocal.png"/>
 
+## Create Benchmarking Environments
+To create benchmarking environment instances used in our paper, let's say we want to evaluate on task `task_name` under the level `partition` with seed `seed`, we can simply run
+```python
+env = make(
+    task_name,
+    modalities=["rgb", "segm"],
+    task_kwargs=PARTITION_TO_SPECS["test"][partition][task_name] or {},
+    seed=seed
+)
+```
+
+Note that by default we set `hide_arm_rgb = True` to avoid any occlusions caused by the robot arm.
+
 # Observation and Action Space
 By default, VIMA-Bench's observation space includes RGB images, segmentation, and an indicator specifying the type of end effector (suction cup or spatula). RGB and segmentation are spatially aligned and are from two views (frontal and top).
 
