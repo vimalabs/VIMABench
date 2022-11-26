@@ -6,7 +6,7 @@
 [[PDF]](https://vimalabs.github.io/assets/vima_paper.pdf)
 [[Pretrained Models]](https://github.com/vimalabs/VIMA#pretrained-models)
 [[Model Code]](https://github.com/vimalabs/VIMA)
-[[Training Data]](https://doi.org/10.5281/zenodo.7127587)
+[[Training Data]](https://huggingface.co/datasets/VIMA/VIMA-Data)
 [[Datasheet]](datasheet.md)
 
 [![Python Version](https://img.shields.io/badge/Python-3.9-blue.svg)](https://github.com/vimalabs/VIMA)
@@ -146,7 +146,7 @@ python3 scripts/data_generation/run.py num_episodes_per_task={num_trajs_to_gener
 ```
 
 # Training Data
-We also release an offline dataset with 650K trajectories conditioned on multimodal prompts to learn general robot manipulation. Our dataset is hosted on [Zenodo](https://doi.org/10.5281/zenodo.7127587).
+We also release an offline dataset with 650K trajectories conditioned on multimodal prompts to learn general robot manipulation. Our dataset is hosted on [🤗Hugging Face](https://huggingface.co/datasets/VIMA/VIMA-Data).
 
 After download and unzip, data are grouped into different tasks. Within each trajectory's folder, there are two folders `rgb_front` and `rgb_top`, and three files `obs.pkl`, `action.pkl`, and `trajectory.pkl`. RGB frames from a certain perspective are separately stored in corresponding folder. `obs.pkl` includes segmentation and state of end effector. `action.pkl` contains oracle actions. `trajectory.pkl` contains meta information such as elapsed steps, task information, and object information. Users can build their custom data piepline starting from here.
 
