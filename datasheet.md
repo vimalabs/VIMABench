@@ -13,7 +13,7 @@ This dataset was created by Yunfan Jiang (NVIDIA, Stanford), Agrim Gupta (Stanfo
 Yes, the dataset is publicly available on the internet.
 
 ### How will the dataset will be distributed (e.g., tarball on website, API, GitHub)?
-The dataset can be downloaded from [Zenodo](https://doi.org/10.5281/zenodo.7127587).
+The dataset can be downloaded from [🤗Hugging Face](https://huggingface.co/datasets/VIMA/VIMA-Data).
 
 ### Have any third parties imposed IP-based or other restrictions on the data associated with the instances?
 No.
@@ -38,7 +38,7 @@ Yes. New updates will be posted on https://vimalabs.github.io/.
 N/A.
 
 ### Will older versions of the dataset continue to be supported/hosted/maintained? 
-Yes, old versions will be permanently accessible on zenodo.org.
+Yes, old versions will be permanently accessible on 🤗Hugging Face.
 
 ### If others want to extend/augment/build on/contribute to the dataset, is there a mechanism for them to do so?
 Yes, please refer to https://vimalabs.github.io/.
@@ -51,7 +51,7 @@ Our data contain successful demonstrations to complete robotics tasks paired wit
 We provide 650K successful trajectories in total.
 
 ### Does the dataset contain all possible instances or is it a sample (not necessarily random) of instances from a larger set?
-We provide all instances in our Zenodo data repositories.
+We provide all instances in our 🤗Hugging Face data repositories.
 
 ### Is there a label or target associated with each instance?
 Yes, we provide optimal action labels to train behavior cloning models.
