@@ -54,6 +54,8 @@ class VIMAEnvBase(gym.Env):
         self.step_counter = 0
         self.assets_root = assets_root
 
+        self.episode_counter = 0
+
         self._debug = debug
         self.set_task(task, task_kwargs)
 
@@ -66,6 +68,23 @@ class VIMAEnvBase(gym.Env):
         ), f"Unsupported modalities provided {modalities}"
         assert "depth" not in modalities, "FIXME: fix depth normalization"
         self.modalities = modalities
+
+        # 所要保存的视角List
+        viewList = []
+
+        cam_pos1 = np.array([0.0, 0.5, 0.7])
+        cam_orientation1 = np.array([0.7, 0.7, 0, 0])
+
+        cam_pos2 = np.array([0.2, 0.3, 0.8])
+        cam_orientation2 = np.array([0.7, 0.4, 0.1, 0])
+
+        cam_pos3 = np.array([0.0, 0.5, 0.7])
+        cam_orientation3 = np.array([0.3, 0.3, 0.7, 0])
+
+        for [pos, cam_orientation] in [[cam_pos1, cam_orientation1], [cam_pos2, cam_orientation2], [cam_pos3, cam_orientation3]]:
+            viewMat, projMatrix = self.get_view(pos, cam_orientation)
+            viewList.append([viewMat, projMatrix])
+        self.viewList = viewList
 
         # setup observation space
         obs_space = {}
@@ -245,7 +264,7 @@ class VIMAEnvBase(gym.Env):
         """
         return self.prompt, self.prompt_assets
 
-    def reset(self, workspace_only=False):
+    def reset(self, task_name="unknow_task", workspace_only=False):
         """Performs common reset functionality for all supported tasks."""
         if not self.task:
             raise ValueError(
@@ -256,6 +275,10 @@ class VIMAEnvBase(gym.Env):
         self.obj_id_reverse_mapping = {}
         self.meta_info = {}
         self.step_counter = 0
+        self.episode_counter += 1
+        self.skip_repetition = 0
+        # self.task_name = task_name
+
         p.resetSimulation(physicsClientId=self.client_id)
         p.setGravity(0, 0, -9.8, physicsClientId=self.client_id)
 
@@ -306,7 +329,6 @@ class VIMAEnvBase(gym.Env):
             for i in range(n_joints)
         ]
         self.joints = [j[0] for j in joints if j[2] == p.JOINT_REVOLUTE]
-
         # Move robot to home joint configuration.
         for i in range(len(self.joints)):
             p.resetJointState(
@@ -386,9 +408,89 @@ class VIMAEnvBase(gym.Env):
 
         obs, _, _, _ = self.step()
 
+        # print("try to print joint info:\n")
+
+        # robot_id = self.ur5
+        # # robot_id = 10
+        # print("robot_id: ", robot_id)
+        # available_joints_indexes = [i for i in range(p.getNumJoints(robot_id)) if
+        #                             p.getJointInfo(robot_id, i)[2] != p.JOINT_FIXED]
+        # print([p.getJointInfo(robot_id, i)[1] for i in available_joints_indexes])
+        # print(p.getJointInfo(robot_id, 4)[1])
+        # print([p.getJointInfo(robot_id, i)[1] for i in available_joints_indexes])
+        # for i in available_joints_indexes:
+        #     tmp = p.getJointInfo(robot_id, i)
+        #     # tmp = p.getJointInfo(robot_id, i)
+        #     for ind, val in enumerate(tmp):
+        #         print(tmp[1],)
+        #         print("joint %s, info index: %d, value:"%(tmp[1], ind), val)
+
+
         return obs
 
-    def step(self, action=None, skip_oracle=True):
+    def micro_step(self, action=None, skip_oracle=True, episode=0, task_name="notFindName!"):
+        """
+        Args:
+            action: micro action
+            skip_oracle:
+            episode:
+            task_name:
+
+        Returns:
+            (obs, reward, done, info) tuple containing MDP step data.
+        """
+        if action is not None:
+
+            if isinstance(self.ee, Suction):
+                timeout, released = self.task.micro_primitive(
+                    self.movej, self.movep, self.ee, action, episode, task_name
+                )
+            elif isinstance(self.ee, Spatula):
+                timeout = self.task.micro_primitive(
+                    self.movej, self.movep, self.ee, action, episode, task_name
+                )
+            else:
+                raise ValueError("Unknown end effector type")
+
+            # Exit early if action times out. We still return an observation
+            # so that we don't break the Gym API contract.
+            if timeout:
+                obs = self._get_obs()
+                return obs, 0.0, True, self._get_info()
+
+        # Step simulator asynchronously until objects settle.
+        # print("out of while")
+        counter = 0
+        while not self.is_static:
+            self.step_simulation()
+            if counter > self._max_sim_steps_to_static:
+                print(
+                    f"WARNING: step until static exceeds max {self._max_sim_steps_to_static} steps!"
+                )
+                break
+            counter += 1
+
+        # we don't care about reward in VIMA
+        reward = 0
+        # update goal sequence accordingly
+        # self.task.update_goals(skip_oracle=skip_oracle)
+        # check if done
+        if isinstance(self.ee, Suction):
+            if action is not None:
+                result_tuple = self.task.check_success(release_obj=released)
+            else:
+                result_tuple = self.task.check_success(release_obj=False)
+        elif isinstance(self.ee, Spatula):
+            result_tuple = self.task.check_success()
+        else:
+            raise NotImplementedError()
+
+        done = result_tuple.success or result_tuple.failure
+        obs = self._get_obs()
+
+        return obs, reward, done, self._get_info()
+
+    def step(self, action=None, skip_oracle=True, episode=0, task_name="notFindName!"):
         """Execute action with specified primitive.
 
         Args:
@@ -408,11 +510,11 @@ class VIMAEnvBase(gym.Env):
 
             if isinstance(self.ee, Suction):
                 timeout, released = self.task.primitive(
-                    self.movej, self.movep, self.ee, pose0, pose1
+                    self.movej, self.movep, self.ee, pose0, pose1, episode, task_name
                 )
             elif isinstance(self.ee, Spatula):
                 timeout = self.task.primitive(
-                    self.movej, self.movep, self.ee, pose0, pose1
+                    self.movej, self.movep, self.ee, pose0, pose1, episode, task_name
                 )
             else:
                 raise ValueError("Unknown end effector type")
@@ -424,6 +526,7 @@ class VIMAEnvBase(gym.Env):
                 return obs, 0.0, True, self._get_info()
 
         # Step simulator asynchronously until objects settle.
+        # print("out of while")
         counter = 0
         while not self.is_static:
             self.step_simulation()
@@ -655,11 +758,22 @@ class VIMAEnvBase(gym.Env):
         # Get segmentation image.
         segm = np.uint8(segm).reshape(depth_image_size)
 
+        # images = p.getCameraImage(300,
+        #                           300,
+        #                           # viewm,
+        #                           # projm,
+        #                           shadow=False,
+        #                           renderer=p.ER_BULLET_HARDWARE_OPENGL)
+        # print(images[2])
+        # import cv2
+        # # import numpy as np
+        # cv2.imwrite("%f.jpg"%(np.random.rand()), images[2])  # [2]是rpg图像
+
         return color, depth, segm
 
     def _get_obs(self):
         obs = {f"{modality}": {} for modality in self.modalities}
-
+        # print("self.agent_cams:\n ", self.agent_cams)
         for view, config in self.agent_cams.items():
             color, depth, segm = self.render_camera(config)
             render_result = {"rgb": color, "depth": depth, "segm": segm}
@@ -689,17 +803,31 @@ class VIMAEnvBase(gym.Env):
     # Robot Movement Functions
     # ---------------------------------------------------------------------------
 
-    def movej(self, targj, speed=0.01, timeout=5):
+    def movej(self, targj, speed=0.01, timeout=50, episode=None, is_act=0, is_end=0,task_stage="un_specified"):
         """Move UR5 to target joint configuration."""
         t0 = time.time()
+        # print("timeout: ", timeout)
+        timeout = 500
         while (time.time() - t0) < timeout:
+            time.sleep(0.1)
             currj = [
                 p.getJointState(self.ur5, i, physicsClientId=self.client_id)[0]
                 for i in self.joints
             ]
+            # print("self.joints: ", self.joints)  # [2, 3, 4, 5, 6, 7]
+
+            # print("getjointstate 2: ", p.getJointState(self.ur5, 2, physicsClientId=self.client_id))
+            # print("getjointstate 3: ", p.getJointState(self.ur5, 3, physicsClientId=self.client_id))
+            # print("getjointstate 4: ", p.getJointState(self.ur5, 4, physicsClientId=self.client_id))
+            # print("getjointstate 5: ", p.getJointState(self.ur5, 5, physicsClientId=self.client_id))
+            # print("getjointstate 6: ", p.getJointState(self.ur5, 6, physicsClientId=self.client_id))
+            # print("getjointstate 7: ", p.getJointState(self.ur5, 7, physicsClientId=self.client_id))
+
+            # print("currj: ", currj)
             currj = np.array(currj)
             diffj = targj - currj
             if all(np.abs(diffj) < 1e-2):
+                "当tar j与curr j差异够小时，停止移动"
                 return False
 
             # Move with constant velocity
@@ -715,21 +843,36 @@ class VIMAEnvBase(gym.Env):
                 positionGains=gains,
                 physicsClientId=self.client_id,
             )
-            self.step_counter += 1
+            # self.step_counter += 1
+
+            if (self.step_counter + 1) % 10 == 0 and (self.skip_repetition != self.step_counter):
+                self.view_image_save(episode=self.episode_counter, viewList=self.viewList, freq_save=self.step_counter, is_act=1, is_end=0,
+                                     stage="%s" % (task_stage))
+                self.skip_repetition = self.step_counter + 1
+            # print("self.step_counter: ", self.step_counter)
             self.step_simulation()
 
         print(f"Warning: movej exceeded {timeout} second timeout. Skipping.")
         return True
 
-    def movep(self, pose, speed=0.01):
+    def movep(self, pose, speed=0.01, meetParaOfMovej=None):
         """Move UR5 to target end effector pose."""
         targj = self.solve_ik(pose)
-        return self.movej(targj, speed)
+        # print("pose for control:", list(pose[0]), list(pose[1]))
+        info = p.getLinkState(4, 0)
+        info = list(info)[:2]  # 只保留坐标与转角
+        # print("pose for save:", list(info[0]), list(info[1]))
+        print("diff of bothpos", [i-j for i,j in zip(list(pose[0]),list(info[0]))])
+        speed = 0.01
+        if not meetParaOfMovej:
+            return self.movej(targj, speed)
+        else:
+            return self.movej(targj, speed, episode=meetParaOfMovej[0], is_act=meetParaOfMovej[1], is_end=meetParaOfMovej[2], task_stage=meetParaOfMovej[3])
 
     def solve_ik(self, pose):
         """Calculate joint configuration with inverse kinematics."""
         joints = p.calculateInverseKinematics(
-            bodyUniqueId=self.ur5,
+            bodyUniqueId=self.ur5,  # self.ur5: 2
             endEffectorLinkIndex=self.ee_tip,
             targetPosition=pose[0],
             targetOrientation=pose[1],
@@ -744,3 +887,100 @@ class VIMAEnvBase(gym.Env):
         joints = np.float32(joints)
         joints[2:] = (joints[2:] + np.pi) % (2 * np.pi) - np.pi
         return joints
+
+    def get_view(self, cam_pos=0, cam_orientation=0):
+        """
+        Arguments
+            cam_pos: camera position
+            cam_orientation: camera orientation in quaternion
+        """
+        width = 300
+        height = 300
+        fov = 90
+        aspect = width / height
+        near = 0.001
+        far = 5
+
+        # cam_pos = np.array([0.0, 0.5, 0.7])
+        # cam_orientation = np.array([0.7, 0.7, 0, 0])
+
+        use_maximal_coordinates = False
+        if use_maximal_coordinates:
+            # cam_orientation has problem when enable bt_rigid_body,
+            # looking at 0.0, 0.0, 0.0 instead
+            # this does not affect performance
+            cam_pos_offset = cam_pos + np.array([0.0, 0.0, 0.3])
+            target_pos = np.array([0.0, 0.0, 0.0])
+        else:
+            # camera pos, look at, camera up direction
+            rot_matrix = p.getMatrixFromQuaternion(cam_orientation)
+            # offset to base pos
+            cam_pos_offset = cam_pos + np.dot(
+                np.array(rot_matrix).reshape(3, 3), np.array([0.1, 0.0, 0.3]))
+            target_pos = cam_pos_offset + np.dot(
+                np.array(rot_matrix).reshape(3, 3), np.array([-1.0, 0.0, 0.0]))
+        # compute view matrix
+        view_matrix = p.computeViewMatrix(cam_pos_offset, target_pos, [0, 0, 1])
+        projection_matrix = p.computeProjectionMatrixFOV(fov, aspect, near, far)
+
+        return view_matrix, projection_matrix
+
+    def view_image_save(self, episode, viewList, freq_save, is_end, is_act, stage):
+        '''
+        Args:
+            episode:
+            viewList:
+            freq_save:
+            stage:  [move_to_pick, picking_success, goal_state]
+        Returns:
+
+        '''
+        for ind, view in enumerate(viewList):
+            images = p.getCameraImage(300,
+                                      300,
+                                      view[0],
+                                      view[1],
+                                      shadow=True,
+                                      renderer=p.ER_BULLET_HARDWARE_OPENGL)
+            # print(images[2])
+            # import cv2
+            from PIL import Image
+            # import numpy as np
+            '''
+            暂存代码
+            info = p.getLinkState(4, 0)
+            info = list(info)[:2]  # 只保留坐标与转角
+            info.insert(0, is_act)  # 夹了东西
+            info.insert(-1, is_end)  # 没有到终点            
+            '''
+            # 实验代码
+            info = p.getLinkState(3, 0)
+            info = list(info)[:2]  # 只保留坐标与转角
+            # print("pose for save:", list(info[0]),list(info[1]))
+            # print(list(info[0]),list(info[1]))
+            # print("3_0 info: ", info)
+            # print(list(info[0]),',', list(utils.quatXYZW_to_eulerXYZ(info[-1])))
+
+            info = p.getLinkState(4, 0)
+            info = list(info)[:2]  # 只保留坐标与转角
+            # print("4_0 info: ", info)
+            # print("4_0 423:",list(utils.quatXYZW_to_eulerXYZ(info[-1])))
+
+
+            # cv2.imwrite("traj_%d_view_%d_%s_%d.jpg" % (episode, ind, stage, freq_save),
+            #             images[2])  # [2]是rpg图像
+            im = Image.fromarray(images[2])
+            # rgb_im = rgb_im.convert('RGB')
+
+            if im.mode in ("RGBA", "P"): im = im.convert("RGB")
+            frontPath = "/Users/liushaofan/code/VIMA"
+            if not os.path.exists(frontPath+r"/save_data/%s/traj_%d/view_%d/" % (self.task_name,episode, ind)):
+                os.makedirs(frontPath+r"/save_data/%s/traj_%d/view_%d/" % (self.task_name,episode, ind))
+            im.save(frontPath+r"/save_data/%s/traj_%d/view_%d/%s_%d.jpg" % (self.task_name,episode, ind, stage, freq_save))
+            # scipy.misc.imsave("traj_%d_view_%d_%s_%d.jpg" % (episode, ind, stage, freq_save),
+            #             images[2])
+        # np.save(file="traj_%d_%s_%d.npy" % (episode, stage, freq_save), arr=info)
+        if not os.path.exists(frontPath+"/save_data/%s/traj_%d/action/" % (self.task_name,episode)):
+            os.makedirs(frontPath+
+            r"/save_data/%s/traj_%d/action/" % (self.task_name,episode))
+        np.save(file=frontPath+r"/save_data/%s/traj_%d/action/%s_%d.npy" % (self.task_name,episode, stage, freq_save), arr=info)

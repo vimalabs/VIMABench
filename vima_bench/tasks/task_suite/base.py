@@ -13,7 +13,7 @@ import gym
 import numpy as np
 import pybullet as p
 
-from ..components import PickPlace, Oracle, get_agent_cam_config, Suction
+from ..components import PickPlace, MicroPickPlace, Oracle, get_agent_cam_config, Suction
 from ..components.encyclopedia.definitions import SizeRange, ObjEntry, TextureEntry
 from ..components.placeholders import Placeholder
 from ..utils import misc_utils as utils
@@ -68,6 +68,7 @@ class BaseTask:
         placeholder_img_size: tuple[int, int] = (128, 256),
         seed: int | None = None,
         debug: bool = False,
+        episode=0
     ):
         self.prompt_template = prompt_template
         self.task_meta = task_meta
@@ -80,6 +81,7 @@ class BaseTask:
         self.ee = Suction
         self.sixdof = False
         self.primitive = PickPlace()
+        self.micro_primitive = MicroPickPlace()
         self.oracle_cams = Oracle.CONFIG
         self.constraint_checking = {"enabled": False}
 

@@ -5,7 +5,7 @@ import pybullet as p
 import vima_bench
 
 
-@hydra.main(config_path=".", config_name="conf")
+@hydra.main(config_path=".", config_name="conf1")
 def main(cfg):
     kwargs = cfg.vima_bench_kwargs
     seed = kwargs["seed"]
@@ -21,7 +21,7 @@ def main(cfg):
     for eposide in tqdm(range(999)):
         env.seed(seed)
 
-        obs = env.reset(task_name=task.task_name)
+        obs = env.reset()
         env.render()
         prompt, prompt_assets = env.get_prompt_and_assets()
         # print(prompt)
@@ -81,17 +81,9 @@ def main(cfg):
 
         # for _ in range(task.oracle_max_steps):
         for _ in range(task.oracle_max_steps):
-
             # print(task.task_name, task.oracle_max_steps)
             oracle_action = oracle_fn.act(obs)
             # clamp action to valid range
-            # print("obs: ", obs)
-            print("oracle_action:\n")
-            print(oracle_action['pose0_position'])
-            print(oracle_action['pose0_rotation'])
-            print(oracle_action['pose1_position'])
-            print(oracle_action['pose1_rotation'])
-
             oracle_action = {
                 k: np.clip(v, env.action_space[k].low, env.action_space[k].high) for k, v in oracle_action.items()
             }
@@ -99,14 +91,10 @@ def main(cfg):
 
             # print("info: ", info)
             # print("oracle_action: \n", oracle_action)
-
-            obs, reward, done, info = env.step(action=oracle_action, skip_oracle=False, episode=env.episode_counter, task_name=task.task_name)
+            print(eposide)
+            obs, reward, done, info = env.step(action=oracle_action, skip_oracle=False, episode=eposide, task_name=task.task_name)
             if done:
                 break
-            import time
-            time.sleep(1)
-        # env.episode_counter += 1
-        print("episode_counter: ", env.episode_counter)
         # print("i999: ", i999)
         # if i999==5:
         #     p.stopStateLogging(log_id)

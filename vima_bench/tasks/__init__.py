@@ -69,6 +69,8 @@ def _load_partition_file(file: str):
 # train
 TRAIN_PARTITION = _load_partition_file("train.yaml")
 
+# print("TRAIN_PARTITION:\n", TRAIN_PARTITION)
+
 # test
 PLACEMENT_GENERALIZATION = _load_partition_file("placement_generalization.yaml")
 COMBINATORIAL_GENERALIZATION = _load_partition_file("combinatorial_generalization.yaml")

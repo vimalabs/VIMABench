@@ -1,0 +1,118 @@
+pybullet build time: Apr  6 2023 16:24:14
+/Users/liushaofan/code/VIMA/VimaBench/scripts/oracle/run.py:8: UserWarning: 
+The version_base parameter is not specified.
+Please specify a compatability version level, or None.
+Will assume defaults for version 1.1
+  @hydra.main(config_path=".", config_name="conf")
+/Users/liushaofan/miniconda3/lib/python3.10/site-packages/hydra/_internal/hydra.py:119: UserWarning: Future Hydra versions will no longer change working directory at job runtime by default.
+See https://hydra.cc/docs/1.2/upgrades/1.1_to_1.2/changes_to_job_working_dir/ for more information.
+  ret = run_job(
+[INFO] 17 tasks loaded
+/Users/liushaofan/miniconda3/lib/python3.10/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+ffffmpeg version 4.2.2 Copyright (c) 2000-2019 the FFmpeg developers
+  built with clang version 12.0.0
+  configuration: --prefix=/Users/ktietz/demo/mc3/conda-bld/ffmpeg_1628925491858/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_plac --cc=arm64-apple-darwin20.0.0-clang --disable-doc --enable-avresample --enable-gmp --enable-hardcoded-tables --enable-libfreetype --enable-libvpx --enable-pthreads --enable-libopus --enable-postproc --enable-pic --enable-pthreads --enable-shared --enable-static --enable-version3 --enable-zlib --enable-libmp3lame --disable-nonfree --enable-gpl --enable-gnutls --disable-openssl --enable-libopenh264 --enable-libx264
+  libavutil      56. 31.100 / 56. 31.100
+  libavcodec     58. 54.100 / 58. 54.100
+  libavformat    58. 29.100 / 58. 29.100
+  libavdevice    58.  8.100 / 58.  8.100
+  libavfilter     7. 57.100 /  7. 57.100
+  libavresample   4.  0.  0 /  4.  0.  0
+  libswscale      5.  5.100 /  5.  5.100
+  libswresample   3.  5.100 /  3.  5.100
+  libpostproc    55.  5.100 / 55.  5.10Input #0, rawvideo, from 'pipe:':
+  Duration: N/A, start: 0.000000, bitrate: 2359296 kb/s
+    Stream #0:0: Video: rawvideo (RGBA / 0x41424752), rgba, 1280x960, 2359296 kb/s, 60 tbr, 60 tbn, 60 tbc
+Stream mapping:
+  Stream #0:0 -> #0:0 (rawvideo (native) -> h264 (libx264))
+[libx264 @ 0x14580bc00] using cpu capabilities: ARMv8 NEON
+[libx264 @ 0x14580bc00] profile High, level 4.2
+[libx264 @ 0x14580bc00] 264 - core 152 - H.264/MPEG-4 AVC codec - Copyleft 2003-2017 - http://www.videolan.org/x264.html - options: cabac=1 ref=5 deblock=1:0:0 analyse=0x3:0x113 me=hex subme=8 psy=1 psy_rd=1.00:0.00 mixed_ref=1 me_range=16 chroma_me=1 trellis=2 8x8dct=1 cqm=0 deadzone=21,11 fast_pskip=1 chroma_qp_offset=-2 threads=15 lookahead_threads=2 sliced_threads=0 nr=0 decimate=1 interlaced=0 bluray_compat=0 constrained_intra=0 bframes=3 b_pyramid=2 b_adapt=1 b_bias=0 direct=3 weightb=1 open_gop=0 weightp=2 keyint=250 keyint_min=25 scenecut=40 intra_refresh=0 rc_lookahead=50 rc=crf mbtree=1 crf=22.0 qcomp=0.60 qpmin=0 qpmax=69 qpstep=4 ip_ratio=1.40 aq=1:1.00
+Output #0, mp4, to 'gui_record.mp4':
+  Metadata:
+    encoder         : Lavf58.29.100
+    Stream #0:0: Video: h264 (libx264) (avc1 / 0x31637661), yuv420p, 1280x960, q=-1--1, 50000 kb/s, 60 fps, 15360 tbn, 60 tbc
+    Metadata:
+      encoder         : Lavc58.54.100 libx264
+    Side data:
+      cpb: bitrate max/min/avg: 0/0/50000000 buffer size: 0 vbv_delay: -1
+task_name:  follow_order
+  0%|          | 0/999 [00:00<?, ?it/s]frame=    9 fps=0.0 q=0.0 size=       0kB time=00:00:00.00 bitrate=N/A speed=   0x    frame=   23 fps= 16 q=0.0 size=       0kB time=00:00:00.00 bitrate=N/A speed=   0x    /Users/liushaofan/miniconda3/lib/python3.10/site-packages/numpy/lib/npyio.py:521: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+  arr = np.asanyarray(arr)
+frame=   52 fps= 27 q=0.0 size=       0kB time=00:00:00.00 bitrate=N/A speed=   0x    frame=   84 fps= 34 q=30.0 size=       0kB time=00:00:00.20 bitrate=   1.9kbits/s speed=0.0819x    frame=  117 fps= 40 q=30.0 size=       0kB time=00:00:00.75 bitrate=   0.5kbits/s speed=0.254x    frame=  147 fps= 42 q=30.0 size=       0kB time=00:00:01.25 bitrate=   0.3kbits/s speed=0.361x    frame=  181 fps= 46 q=30.0 size=       0kB time=00:00:01.81 bitrate=   0.2kbits/s speed=0.458x    frame=  216 fps= 48 q=30.0 size=       0kB time=00:00:02.40 bitrate=   0.2kbits/s speed=0.537x    frame=  243 fps= 49 q=30.0 size=       0kB time=00:00:02.85 bitrate=   0.1kbits/s speed=0.573x    frame=  274 fps= 50 q=30.0 size=       0kB time=00:00:03.36 bitrate=   0.1kbits/s speed=0.614x    frame=  303 fps= 51 q=30.0 size=       0kB time=00:00:03.85 bitrate=   0.1kbits/s speed=0.642x    frame=  334 fps= 51 q=30.0 size=       0kB time=00:00:04.36 bitrate=   0.1kbits/s speed=0.671x    frame=  368 fps= 52 q=30.0 size=     256kB time=00:00:04.93 bitrate= 425.2kbits/s speed=0.702x    frame=  401 fps= 53 q=30.0 size=     256kB time=00:00:05.48 bitrate= 382.5kbits/s speed=0.727x    frame=  433 fps= 54 q=30.0 size=     256kB time=00:00:06.01 bitrate= 348.6kbits/s speed=0.746x    frame=  463 fps= 54 q=30.0 size=     256kB time=00:00:06.51 bitrate= 321.9kbits/s speed=0.76x    frame=  492 fps= 54 q=30.0 size=     256kB time=00:00:07.00 bitrate= 299.6kbits/s speed=0.771x    frame=  522 fps= 54 q=30.0 size=     256kB time=00:00:07.50 bitrate= 279.7kbits/s speed=0.783x    frame=  542 fps= 54 q=30.0 size=     256kB time=00:00:07.83 bitrate= 267.8kbits/s speed=0.775x    frame=  570 fps= 54 q=30.0 size=     256kB time=00:00:08.30 bitrate= 252.7kbits/s speed=0.782x      0%|          | 1/999 [00:10<2:57:52, 10.69s/it]frame=  601 fps= 52 q=30.0 size=     256kB time=00:00:08.81 bitrate= 237.9kbits/s speed=0.769x    frame=  623 fps= 52 q=30.0 size=     256kB time=00:00:09.18 bitrate= 228.4kbits/s speed=0.768x    frame=  657 fps= 53 q=30.0 size=     256kB time=00:00:09.75 bitrate= 215.1kbits/s speed=0.782x    frame=  692 fps= 53 q=30.0 size=     512kB time=00:00:10.33 bitrate= 405.9kbits/s speed=0.796x    frame=  713 fps= 53 q=30.0 size=     512kB time=00:00:10.68 bitrate= 392.6kbits/s speed=0.792x      0%|          | 1/999 [00:13<3:49:33, 13.80s/it]
+0
+0
+1
+Error executing job with overrides: []
+Traceback (most recent call last):
+  File "/Users/liushaofan/code/VIMA/VimaBench/scripts/oracle/run.py", line 95, in main
+    obs,  0%|          | 2/999 [00:14<2:01:23,  7.31s/it]
+0
+1
+2
+Error executing job with overrides: []
+Traceback (most recent call last):
+  File "/Users/liushaofan/code/VIMA/VimaBench/scripts/oracle/run1.py", line 95, in main
+    obs, reward, done, info = env.step(action=oracle_action, skip_oracle=False, episode=eposide, task_name=task.task_name)
+  File "/Users/liushaofan/code/VIMA/VimaBench/vima_bench/env/wrappers/prompt_renderer.py", line 36, in step
+    return self.env.step(*args, **kwargs)
+  File "/Users/liushaofan/code/VIMA/VimaBench/vima_bench/env/base.py", line 427, in step
+    timeout, released = self.task.primitive(
+  File "/Users/liushaofan/code/VIMA/VimaBench/vima_bench/tasks/components/action_primitives.py", line 246, in __call__
+    timeout |= movep(targ_pose)
+  File "/Users/liushaofan/code/VIMA/VimaBench/vima_bench/env/base.py", line 756, in movep
+    return self.movej(targj, speed)
+  File "/Users/liushaofan/code/VIMA/VimaBench/vima_bench/env/base.py", line 725, in movej
+    currj = [
+  File "/Users/liushaofan/code/VIMA/VimaBench/vima_bench/env/base.py", line 726, in <listcomp>
+    p.getJointState(self.ur5, i, physicsClientId=self.client_id)[0]
+pybullet.error: getJointState failed.
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
+argv[0]=--width=640
+argv[1]=--height=480
+argv[2]=--mp4=gui_record.mp4
+argv[3]=--mp4fps=60
+Version = 4.1 Metal - 83
+Vendor = Apple
+Renderer = Apple M1 Pro
+b3Printf: Selected demo: Physics Server
+startThreads creating 1 threads.
+starting thread 0
+started thread 0 
+MotionThreadFunc thread started
+text argument:/Users/liushaofan/code/VIMA/VimaBench/vima_bench/tasks/assets
+int args: [numActiveThreads = 0
+stopping threads
+Thread with taskId 0 exiting
+Thread TERMINATED
+destroy semaphore
+semaphore destroyed
+destroy main semaphore
+main semaphore destroyed
+frame=  778 fps= 51 q=30.0 size=     512kB time=00:00:11.76 bitrate= 356.5kbits/s speed=0.776x    frame=  778 fps= 51 q=-1.0 Lsize=     686kB time=00:00:12.91 bitrate= 435.2kbits/s speed=0.846x    
+video:676kB audio:0kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: 1.458165%
+[libx264 @ 0x111808e00] frame I:9     Avg QP:13.27  size: 12241
+[libx264 @ 0x111808e00] frame P:205   Avg QP:17.86  size:  1768
+[libx264 @ 0x111808e00] frame B:564   Avg QP:20.11  size:   389
+[libx264 @ 0x111808e00] consecutive B-frames:  2.8%  1.0%  1.5% 94.6%
+[libx264 @ 0x111808e00] mb I  I16..4: 57.8% 36.6%  5.6%
+[libx264 @ 0x111808e00] mb P  I16..4:  0.3%  0.8%  0.2%  P16..4:  2.8%  1.1%  0.5%  0.0%  0.0%    skip:94.1%
+[libx264 @ 0x111808e00] mb B  I16..4:  0.0%  0.0%  0.0%  B16..8:  2.8%  0.5%  0.1%  direct: 0.0%  skip:96.6%  L0:53.2% L1:45.6% BI: 1.1%
+[libx264 @ 0x111808e00] 8x8 transform intra:42.4% inter:17.2%
+[libx264 @ 0x111808e00] direct mvs  spatial:98.2% temporal:1.8%
+[libx264 @ 0x111808e00] coded y,uvDC,uvAC intra: 7.8% 9.9% 6.9% inter: 0.2% 0.3% 0.2%
+[libx264 @ 0x111808e00] i16 v,h,dc,p: 81% 12%  3%  4%
+[libx264 @ 0x111808e00] i8 v,h,dc,ddl,ddr,vr,hd,vl,hu: 25% 14% 47%  2%  2%  2%  3%  2%  2%
+[libx264 @ 0x111808e00] i4 v,h,dc,ddl,ddr,vr,hd,vl,hu: 22% 23% 27%  4%  6%  4%  5%  4%  6%
+[libx264 @ 0x111808e00] i8c dc,h,v,p: 84% 10%  4%  2%
+[libx264 @ 0x111808e00] Weighted P-Frames: Y:0.0% UV:0.0%
+[libx264 @ 0x111808e00] ref P L0: 70.3%  2.8% 16.5%  6.3%  3.9%  0.2%
+[libx264 @ 0x111808e00] ref B L0: 69.8% 25.7%  3.7%  0.8%
+[libx264 @ 0x111808e00] ref B L1: 94.9%  5.1%
+[libx264 @ 0x111808e00] kb/s:426.88
+ 3.6%  0.2%
+[libx264 @ 0x14580bc00] ref B L0: 69.8% 25.9%  3.5%  0.8%
+[libx264 @ 0x14580bc00] ref B L1: 94.7%  5.3%
+[libx264 @ 0x14580bc00] kb/s:390.41

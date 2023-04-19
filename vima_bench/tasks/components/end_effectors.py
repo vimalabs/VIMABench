@@ -185,6 +185,7 @@ class Suction(Gripper):
             physicsClientId=client_id,
         )
         self.body_uid = self.body
+        # print("self.body_uid: ", self.body_uid)
         if not self.is_visible:
             pybullet_utils.set_visibility_bullet(
                 self.client_id, self.body_uid, pybullet_utils.INVISIBLE_ALPHA
