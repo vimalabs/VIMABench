@@ -218,7 +218,7 @@ class PickPlace:
         #               -0.02000020071864128, 0.0]
 
         # 保存频率
-        freq_save = 0
+        freq_save = 00
         # 所要保存的视角List
         viewList = []
 
