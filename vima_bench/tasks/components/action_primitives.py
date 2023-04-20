@@ -199,61 +199,46 @@ class PickPlace:
         pick_pose = (np.array([pose0[0][0], pose0[0][1], 0]), pose0[1])
         place_pose = (np.array([pose1[0][0], pose1[0][1], 0]), pose1[1])
 
+        # print("pick pose: ", pick_pose)
+        # timeout = movep(((0.5, 0, 0.32), (0, 0, 0, 1)), self.speed, [episode, 0, 0, "move to start"])
+
         # Execute picking primitive.
         prepick_to_pick = ((0, 0, 0.32), (0, 0, 0, 1))
         postpick_to_pick = ((0, 0, self.height), (0, 0, 0, 1))
         prepick_pose = utils.multiply(pick_pose, prepick_to_pick)
         postpick_pose = utils.multiply(pick_pose, postpick_to_pick)
-        timeout = movep(prepick_pose, self.speed, [episode,0,0,"%s_move_to_pick" % (task_name)])
+
+        info = p.getLinkState(3, 0)
+        info = list(info)[:2]  # 只保留坐标与转角
+        print("pose for save:", list(info[0]),list(info[1]))
+        # while True:
+        #     timeout = movep(((0.487, 0.109, 0.32), (0,0,0,1)), self.speed, [episode, 0, 0, "move_to_pick"])
+
+        timeout = movep(prepick_pose, self.speed, [episode,0,0,"move_to_pick"])
+
+        # self.micro_move()
+        # def micro_move(self, beg_pos, targ_pose, delta, movep, ee, timeout, episode, is_act, is_end, task_name):
 
         # Move towards pick pose until contact is detected.
         delta = (np.float32([0, 0, -0.001]), utils.eulerXYZ_to_quatXYZW((0, 0, 0)))
         targ_pose = prepick_pose
 
-        # 视角矩阵示例
-        # viewMat = [-0.5120397806167603, 0.7171027660369873, -0.47284144163131714, 0.0, -0.8589617609977722,
-        #            -0.42747554183006287, 0.28186774253845215, 0.0, 0.0, 0.5504802465438843, 0.8348482847213745, 0.0,
-        #            0.1925382763147354, -0.24935829639434814, -0.4401884973049164, 1.0]
-        # projMatrix = [0.75, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0000200271606445, -1.0, 0.0, 0.0,
-        #               -0.02000020071864128, 0.0]
-
-        # 保存频率
-        freq_save = 00
-        # 所要保存的视角List
-        viewList = []
-
-        cam_pos1 = np.array([0.0, 0.5, 0.7])
-        cam_orientation1 = np.array([0.7, 0.7, 0, 0])
-
-        cam_pos2 = np.array([0.2, 0.3, 0.8])
-        cam_orientation2 = np.array([0.7, 0.4, 0.1, 0])
-
-        cam_pos3 = np.array([0.0, 0.5, 0.7])
-        cam_orientation3 = np.array([0.3, 0.3, 0.7, 0])
-
-        for [pos, cam_orientation] in [[cam_pos1, cam_orientation1], [cam_pos2, cam_orientation2], [cam_pos3, cam_orientation3]]:
-            viewMat, projMatrix = self.get_view(pos, cam_orientation)
-            viewList.append([viewMat, projMatrix])
-
         while not ee.detect_contact():  # and target_pose[2] > 0:
             # time.sleep(0.02)
-            # print("move to pick")
-
-            # freq_save += 1
-            # if freq_save % 50 == 1:
-            #     self.view_image_save(episode, viewList, freq_save, is_act=1, is_end=1, stage="%s_move_to_pick"%(task_name))
-
             targ_pose = utils.multiply(targ_pose, delta)
-            timeout |= movep(targ_pose, self.speed, [episode,0,0,"%s_move_to_pick" % (task_name)])
-
+            timeout |= movep(targ_pose, self.speed, [episode,0,0,"down_to_pick"])
             if timeout:
                 return True, False
 
         # Activate end effector, move up, and check picking success.
         ee.activate()
-        # timeout |= movep(postpick_pose, self.speed, [episode, 1, 0, "%s_picking_success" % (task_name)])
-        timeout |= movep(postpick_pose, self.speed)
+        # 吸到物体之后, 原地举起来
+        print("after picking, up")
+        timeout |= movep(postpick_pose, self.speed, [episode, 1, 0, "pick_success_up"])
+        print("after picking, up, end")
+        # timeout |= movep(postpick_pose, self.speed)
         pick_success = ee.check_grasp()
+
 
         # Execute placing primitive if pick is successful.
         if pick_success:
@@ -262,38 +247,79 @@ class PickPlace:
             preplace_pose = utils.multiply(place_pose, preplace_to_place)
             postplace_pose = utils.multiply(place_pose, postplace_to_place)
             targ_pose = preplace_pose
-            # print("while begin!")
-            while not ee.detect_contact():
-                # time.sleep(0.5)
-                # print("pick_success")
 
-                # print("place_pose: ", list(place_pose[0]),list(place_pose[1]))
-                # print("targ_pose: ", targ_pose)
+            postpick_euler = utils.quatXYZW_to_eulerXYZ(postpick_pose[1])
+            targ_euler = utils.quatXYZW_to_eulerXYZ(targ_pose[1])
+            beg_pose= (postpick_pose[0], (0,0,0,1))
 
-                # freq_save += 1
-                # if freq_save % 50 == 1:
-                #     self.view_image_save(episode, viewList, freq_save, is_act=1, is_end=0, stage="%s_picking_success"%(task_name))
+            quat_diff = np.mean([abs(i - j) for i, j in zip(beg_pose[1], targ_pose[1])])
+            pos_diff = np.mean([(i-j)**2 for i,j in zip(place_pose[0],postpick_pose[0])])
 
-                targ_pose = utils.multiply(targ_pose, delta)
-                timeout |= movep(targ_pose, self.speed, [episode, 1, 0, "%s_picking_success" % (task_name)])
+            rotation_delta = (np.float32([0, 0, 0]), utils.eulerXYZ_to_quatXYZW(((targ_euler[0] - postpick_euler[
+                0]) / 100, (targ_euler[1] - postpick_euler[1]) / 100, (targ_euler[2] - postpick_euler[2]) / 100)))
 
+            horizonal_delta = (
+            np.float32([(i - j) / 100 for i, j in zip(preplace_pose[0], postpick_pose[0])]), (0, 0, 0, 1))
+
+            # time.sleep(0.5)
+            # print("pick_success")
+
+            # 旋转到目标位置
+            while quat_diff > 0.01:
+                beg_pose = utils.multiply(beg_pose, rotation_delta)
+                timeout |= movep(beg_pose, self.speed, [episode, 1, 0, "rotate"])
+                quat_diff = np.mean([abs(i - j) for i, j in zip(beg_pose[1], targ_pose[1])])
                 if timeout:
                     return True, False
 
-            # print("while end")
+            # 平移到目的地
+            while pos_diff > 0.1:
+                beg_pose = utils.multiply(beg_pose, horizonal_delta)
+                timeout |= movep(beg_pose, self.speed, [episode, 1, 0, "move_to_put"])
+                pos_diff = np.mean([(i - j) ** 2 for i, j in zip(place_pose[0], beg_pose[0])])
+                if timeout:
+                    return True, False
 
-            # 因为要存reward=1的状态，最终状态一定要保存
-            # self.view_image_save(episode, viewList, freq_save, is_act=1, is_end=1, stage="%s_goal_state"%(task_name))
+            # 下降到地面
+            while not ee.detect_contact():
+                targ_pose = utils.multiply(targ_pose, delta)
+                timeout |= movep(targ_pose, self.speed, [episode, 1, 0, "down_to_put"])
+                if timeout:
+                    return True, False
 
             ee.release()
             # 只保存最后一次的goal state
-            timeout |= movep(prepick_pose, self.speed, [episode, 1, 1, "%s_goal_state" % (task_name)])
+            timeout |= movep(prepick_pose, self.speed, [episode, 1, 1, "up"])
+
 
         # Move to prepick pose if pick is not successful.
         else:
             ee.release()
             timeout |= movep(prepick_pose, self.speed, [episode, 1, 1, "%s_goal_state" % (task_name)])
 
+        return timeout, pick_success
+
+
+    def micro_move(self, beg_pose, end_pose, type=0, threshold=0.01, movep=None, ee=None, timeout=None, is_act=0, is_end=0, stage="unspecifi"):
+        horizonal_delta = (np.float32([(i - j) / 100 for i, j in zip(end_pose[0], beg_pose[0])]), (0, 0, 0, 1))
+        rotation_delta = (np.float32([0, 0, 0]),
+                          utils.eulerXYZ_to_quatXYZW(tuple([(i - j) / 100 for i, j in zip(end_pose[1], beg_pose[1])])))
+
+        delta = horizonal_delta if type==0 else rotation_delta
+
+        beg_pose = beg_pose[type]
+        end_pose = end_pose[type]
+
+        pos_diff = np.mean([abs(i - j) for i, j in zip(beg_pose, end_pose)])
+
+        while pos_diff > threshold:
+            beg_pose = utils.multiply(beg_pose, delta)
+            timeout |= movep(beg_pose, self.speed, [1, 0, stage])
+            pos_diff = np.mean([abs(i - j) for i, j in zip(beg_pose, end_pose)])
+            if timeout:
+                return True, False
+
+        pick_success = ee.check_grasp()
         return timeout, pick_success
 
     def view_image_save(self, episode, viewList, freq_save, is_end, is_act, stage):
@@ -368,7 +394,6 @@ class PickPlace:
 
         return view_matrix, projection_matrix
 
-
 class MicroPickPlace:
     """Pick and place primitive with micro actions."""
 
@@ -387,83 +412,90 @@ class MicroPickPlace:
         Returns:
           timeout: robot movement timed out if True.
         """
-        pose0 = []
-        pose1 = []
+        # pose0 = []
+        # pose1 = []
+        #
+        # pick_pose = (np.array([pose0[0][0], pose0[0][1], 0]), pose0[1])
+        # place_pose = (np.array([pose1[0][0], pose1[0][1], 0]), pose1[1])
 
-        pick_pose = (np.array([pose0[0][0], pose0[0][1], 0]), pose0[1])
-        place_pose = (np.array([pose1[0][0], pose1[0][1], 0]), pose1[1])
-
-        # Execute picking primitive.
+        target_pose = (np.array([i for i in micro_action[:3]]), np.array([i for i in micro_action[3:]]))
         prepick_to_pick = ((0, 0, 0.32), (0, 0, 0, 1))
-        postpick_to_pick = ((0, 0, self.height), (0, 0, 0, 1))
-        prepick_pose = utils.multiply(pick_pose, prepick_to_pick)
-        postpick_pose = utils.multiply(pick_pose, postpick_to_pick)
-        timeout = movep(prepick_pose, self.speed, [episode, 0, 0, "%s_move_to_pick" % (task_name)])
+        # target_pose = utils.multiply(target_pose, prepick_to_pick)
+        timeout = movep(target_pose, self.speed, [episode, 0, 0, "%s_micro_move" % (task_name)])
 
-        # Move towards pick pose until contact is detected.
-        delta = (np.float32([0, 0, -0.001]), utils.eulerXYZ_to_quatXYZW((0, 0, 0)))
-        targ_pose = prepick_pose
 
-        while not ee.detect_contact():  # and target_pose[2] > 0:
-            # time.sleep(0.02)
-            # print("move to pick")
+        # # Execute picking primitive.
+        # prepick_to_pick = ((0, 0, 0.32), (0, 0, 0, 1))
+        # postpick_to_pick = ((0, 0, self.height), (0, 0, 0, 1))
+        # prepick_pose = utils.multiply(pick_pose, prepick_to_pick)
+        # postpick_pose = utils.multiply(pick_pose, postpick_to_pick)
+        # timeout = movep(prepick_pose, self.speed, [episode, 0, 0, "%s_move_to_pick" % (task_name)])
+        #
+        # # Move towards pick pose until contact is detected.
+        # delta = (np.float32([0, 0, -0.001]), utils.eulerXYZ_to_quatXYZW((0, 0, 0)))
+        # targ_pose = prepick_pose
 
-            # freq_save += 1
-            # if freq_save % 50 == 1:
-            #     self.view_image_save(episode, viewList, freq_save, is_act=1, is_end=1, stage="%s_move_to_pick"%(task_name))
-
-            targ_pose = utils.multiply(targ_pose, delta)
-            timeout |= movep(targ_pose, self.speed, [episode, 0, 0, "%s_move_to_pick" % (task_name)])
-
-            if timeout:
-                return True, False
-
-        # Activate end effector, move up, and check picking success.
-        ee.activate()
-        # timeout |= movep(postpick_pose, self.speed, [episode, 1, 0, "%s_picking_success" % (task_name)])
-        timeout |= movep(postpick_pose, self.speed)
+        # while not ee.detect_contact():  # and target_pose[2] > 0:
+        #     # time.sleep(0.02)
+        #     # print("move to pick")
+        #
+        #     # freq_save += 1
+        #     # if freq_save % 50 == 1:
+        #     #     self.view_image_save(episode, viewList, freq_save, is_act=1, is_end=1, stage="%s_move_to_pick"%(task_name))
+        #
+            # targ_pose = utils.multiply(targ_pose, delta)
+        #     timeout |= movep(targ_pose, self.speed, [episode, 0, 0, "%s_move_to_pick" % (task_name)])
+        #
+        #     if timeout:
+        #         return True, False
+        #
+        # # Activate end effector, move up, and check picking success.
+        # ee.activate()
+        # # timeout |= movep(postpick_pose, self.speed, [episode, 1, 0, "%s_picking_success" % (task_name)])
+        # timeout |= movep(postpick_pose, self.speed)
         pick_success = ee.check_grasp()
-
-        # Execute placing primitive if pick is successful.
-        if pick_success:
-            preplace_to_place = ((0, 0, self.height), (0, 0, 0, 1))
-            postplace_to_place = ((0, 0, 0.32), (0, 0, 0, 1))
-            preplace_pose = utils.multiply(place_pose, preplace_to_place)
-            postplace_pose = utils.multiply(place_pose, postplace_to_place)
-            targ_pose = preplace_pose
-            print("while begin!")
-            while not ee.detect_contact():
-                # time.sleep(0.5)
-                # print("pick_success")
-
-                print("place_pose: ", list(place_pose[0]), list(place_pose[1]))
-                print("targ_pose: ", targ_pose)
-
-                # freq_save += 1
-                # if freq_save % 50 == 1:
-                #     self.view_image_save(episode, viewList, freq_save, is_act=1, is_end=0, stage="%s_picking_success"%(task_name))
-
-                targ_pose = utils.multiply(targ_pose, delta)
-                timeout |= movep(targ_pose, self.speed, [episode, 1, 0, "%s_picking_success" % (task_name)])
-
-                if timeout:
-                    return True, False
-
-            print("while end")
-
-            # 因为要存reward=1的状态，最终状态一定要保存
-            # self.view_image_save(episode, viewList, freq_save, is_act=1, is_end=1, stage="%s_goal_state"%(task_name))
-
-            ee.release()
-            # 只保存最后一次的goal state
-            timeout |= movep(prepick_pose, self.speed, [episode, 1, 1, "%s_goal_state" % (task_name)])
-
-        # Move to prepick pose if pick is not successful.
-        else:
-            ee.release()
-            timeout |= movep(prepick_pose, self.speed, [episode, 1, 1, "%s_goal_state" % (task_name)])
+        #
+        # # Execute placing primitive if pick is successful.
+        # if pick_success:
+        #     preplace_to_place = ((0, 0, self.height), (0, 0, 0, 1))
+        #     postplace_to_place = ((0, 0, 0.32), (0, 0, 0, 1))
+        #     preplace_pose = utils.multiply(place_pose, preplace_to_place)
+        #     postplace_pose = utils.multiply(place_pose, postplace_to_place)
+        #     targ_pose = preplace_pose
+        #     print("while begin!")
+        #     while not ee.detect_contact():
+        #         # time.sleep(0.5)
+        #         # print("pick_success")
+        #
+        #         print("place_pose: ", list(place_pose[0]), list(place_pose[1]))
+        #         print("targ_pose: ", targ_pose)
+        #
+        #         # freq_save += 1
+        #         # if freq_save % 50 == 1:
+        #         #     self.view_image_save(episode, viewList, freq_save, is_act=1, is_end=0, stage="%s_picking_success"%(task_name))
+        #
+        #         targ_pose = utils.multiply(targ_pose, delta)
+        #         timeout |= movep(targ_pose, self.speed, [episode, 1, 0, "%s_picking_success" % (task_name)])
+        #
+        #         if timeout:
+        #             return True, False
+        #
+        #     print("while end")
+        #
+        #     # 因为要存reward=1的状态，最终状态一定要保存
+        #     # self.view_image_save(episode, viewList, freq_save, is_act=1, is_end=1, stage="%s_goal_state"%(task_name))
+        #
+        #     ee.release()
+        #     # 只保存最后一次的goal state
+        #     timeout |= movep(prepick_pose, self.speed, [episode, 1, 1, "%s_goal_state" % (task_name)])
+        #
+        # # Move to prepick pose if pick is not successful.
+        # else:
+        #     ee.release()
+        #     timeout |= movep(prepick_pose, self.speed, [episode, 1, 1, "%s_goal_state" % (task_name)])
 
         return timeout, pick_success
+
 
 
 class Push:

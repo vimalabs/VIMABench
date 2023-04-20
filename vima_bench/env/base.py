@@ -803,18 +803,17 @@ class VIMAEnvBase(gym.Env):
     # Robot Movement Functions
     # ---------------------------------------------------------------------------
 
-    def movej(self, targj, speed=0.01, timeout=50, episode=None, is_act=0, is_end=0,task_stage="un_specified"):
+    def movej(self, targj, speed=0.01, timeout=50, is_act=0, is_end=0,task_stage="un_specified"):
         """Move UR5 to target joint configuration."""
         t0 = time.time()
         # print("timeout: ", timeout)
         timeout = 500
         while (time.time() - t0) < timeout:
-            time.sleep(0.1)
+            # time.sleep(0.1)
             currj = [
                 p.getJointState(self.ur5, i, physicsClientId=self.client_id)[0]
                 for i in self.joints
             ]
-            # print("self.joints: ", self.joints)  # [2, 3, 4, 5, 6, 7]
 
             # print("getjointstate 2: ", p.getJointState(self.ur5, 2, physicsClientId=self.client_id))
             # print("getjointstate 3: ", p.getJointState(self.ur5, 3, physicsClientId=self.client_id))
@@ -844,8 +843,9 @@ class VIMAEnvBase(gym.Env):
                 physicsClientId=self.client_id,
             )
             # self.step_counter += 1
+            # print(self.step_counter)
 
-            if (self.step_counter + 1) % 10 == 0 and (self.skip_repetition != self.step_counter):
+            if (self.step_counter + 1) % 10 == 0:
                 self.view_image_save(episode=self.episode_counter, viewList=self.viewList, freq_save=self.step_counter, is_act=1, is_end=0,
                                      stage="%s" % (task_stage))
                 self.skip_repetition = self.step_counter + 1
@@ -857,17 +857,51 @@ class VIMAEnvBase(gym.Env):
 
     def movep(self, pose, speed=0.01, meetParaOfMovej=None):
         """Move UR5 to target end effector pose."""
+        # print("pose：", pose)
         targj = self.solve_ik(pose)
+        # print("targj：", targj)
         # print("pose for control:", list(pose[0]), list(pose[1]))
-        info = p.getLinkState(4, 0)
-        info = list(info)[:2]  # 只保留坐标与转角
+        # print("------------")
+        # print("ee_fixed_joint",  p.getJointState(self.ur5, 8, physicsClientId=self.client_id))
+        # print("Joint info:\n", [p.getJointInfo(self.ur5, i,physicsClientId=self.client_id)[0] for i in range(p.getNumJoints(self.ur5))])
+        # print("Joint info:\n",
+        #       [p.getJointInfo(self.ur5, i, physicsClientId=self.client_id)[0] for i in range(p.getNumJoints(self.ur5))])
+        # print(p.getJointInfo(self.ur5, 8, physicsClientId=self.client_id))
+        # print(p.getJointState(self.ur5, 8, physicsClientId=self.client_id))
+        # print(p.getJointInfo(self.ur5, 9, physicsClientId=self.client_id))
+        # print(p.getJointState(self.ur5, 9, physicsClientId=self.client_id))
+        # print(p.getJointInfo(self.ur5, 10, physicsClientId=self.client_id))
+        # print(p.getJointState(self.ur5, 10, physicsClientId=self.client_id))
+        # print(p.getJointInfo(self.ur5, 11, physicsClientId=self.client_id))
+        # print(p.getJointState(self.ur5, 11, physicsClientId=self.client_id))
+
+        # print(p.getJointState(self.ur5, 7, physicsClientId=self.client_id))
+
+        # print("calculateInverseDynamics: ", p.calculateInverseDynamics(currj))
+        # print("self.joints: ", self.joints)  # [2, 3, 4, 5, 6, 7]
+
+
+
+        # info = p.getLinkState(3, 0, computeLinkVelocity=1, computeForwardKinematics=1, physicsClientId=self.client_id)
+        # info = p.getLinkState(4, 0, computeLinkVelocity=1, computeForwardKinematics=1, physicsClientId=self.client_id)
+        # ret_name = ["position_linkcom_world","world_rotation_linkcom","position_linkcom_frame","frame_rotation_linkcom","position_frame_world","world_rotation_frame","linearVelocity_linkcom_world","angularVelocity_linkcom_world"]
+        # for k,v in zip(ret_name, info):
+        #     if len(v)==4:
+        #         print(k, [i - j for i, j in zip(list(pose[1]), list(v))])
+        #         print(k, v)
+
+        # info = list(info)[:2]  # 只保留坐标与转角
+        # info = [list(info)[0]] + [list(info)[3]]
+        # print(info)
+
         # print("pose for save:", list(info[0]), list(info[1]))
-        print("diff of bothpos", [i-j for i,j in zip(list(pose[0]),list(info[0]))])
-        speed = 0.01
+        # print("diff of both pos", [i-j for i,j in zip(list(pose[0]),list(info[0]))])
+        # print("diff of both dir", [i - j for i, j in zip(list(pose[1]), list(info[1]))])
+        # speed = 0.01
         if not meetParaOfMovej:
             return self.movej(targj, speed)
         else:
-            return self.movej(targj, speed, episode=meetParaOfMovej[0], is_act=meetParaOfMovej[1], is_end=meetParaOfMovej[2], task_stage=meetParaOfMovej[3])
+            return self.movej(targj, speed, is_act=meetParaOfMovej[0], is_end=meetParaOfMovej[1], task_stage=meetParaOfMovej[2])
 
     def solve_ik(self, pose):
         """Calculate joint configuration with inverse kinematics."""

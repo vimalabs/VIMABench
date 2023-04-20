@@ -43,19 +43,20 @@ def main(cfg):
 
             for ind,val in enumerate(pre_control_actions):
                 if ind%2==0:
-                    control_actions_.append(val)
+                    control_actions_.append([val[0], val[1], val[2]-0.11])  # 0.11是上下移动的动作补偿
                 if ind % 2 == 1:
-                    control_actions_[-1] += val
+                    control_actions_[-1] += [val[0]-0.7, val[1]+0.7, val[2], val[3]+1]
 
             control_actions = [val for ind, val in enumerate(control_actions_) if ind%3==0]
             # print(control_actions)
-            while not control_actions:
+            while control_actions:
+                print(len(control_actions))
                 # obs, reward, done, info = env.step(action=oracle_action, skip_oracle=False, episode=env.episode_counter, task_name=task.task_name)
                 obs, reward, done, info = env.micro_step(action=control_actions[-1], skip_oracle=False, episode=env.episode_counter,
                                                    task_name=task.task_name)
                 control_actions.pop()
-                if done:
-                    break
+                # if done:
+                #     break
                 import time
                 time.sleep(1)
         print("episode_counter: ", env.episode_counter)
