@@ -808,6 +808,7 @@ class VIMAEnvBase(gym.Env):
         t0 = time.time()
         # print("timeout: ", timeout)
         timeout = 500
+        speed = 0.01
         while (time.time() - t0) < timeout:
             # time.sleep(0.1)
             currj = [
