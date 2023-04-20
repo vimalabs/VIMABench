@@ -104,7 +104,7 @@ def main(cfg):
             if done:
                 break
             import time
-            time.sleep(1)
+            # time.sleep(1)
         # env.episode_counter += 1
         print("episode_counter: ", env.episode_counter)
         # print("i999: ", i999)

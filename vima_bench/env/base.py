@@ -55,6 +55,7 @@ class VIMAEnvBase(gym.Env):
         self.assets_root = assets_root
 
         self.episode_counter = 0
+        self.all_actions = []
 
         self._debug = debug
         self.set_task(task, task_kwargs)
@@ -816,14 +817,6 @@ class VIMAEnvBase(gym.Env):
                 for i in self.joints
             ]
 
-            # print("getjointstate 2: ", p.getJointState(self.ur5, 2, physicsClientId=self.client_id))
-            # print("getjointstate 3: ", p.getJointState(self.ur5, 3, physicsClientId=self.client_id))
-            # print("getjointstate 4: ", p.getJointState(self.ur5, 4, physicsClientId=self.client_id))
-            # print("getjointstate 5: ", p.getJointState(self.ur5, 5, physicsClientId=self.client_id))
-            # print("getjointstate 6: ", p.getJointState(self.ur5, 6, physicsClientId=self.client_id))
-            # print("getjointstate 7: ", p.getJointState(self.ur5, 7, physicsClientId=self.client_id))
-
-            # print("currj: ", currj)
             currj = np.array(currj)
             diffj = targj - currj
             if all(np.abs(diffj) < 1e-2):
@@ -846,10 +839,10 @@ class VIMAEnvBase(gym.Env):
             # self.step_counter += 1
             # print(self.step_counter)
 
-            if (self.step_counter + 1) % 10 == 0:
-                self.view_image_save(episode=self.episode_counter, viewList=self.viewList, freq_save=self.step_counter, is_act=1, is_end=0,
-                                     stage="%s" % (task_stage))
-                self.skip_repetition = self.step_counter + 1
+            # if (self.step_counter + 1) % 10 == 0:
+            #     self.view_image_save(episode=self.episode_counter, viewList=self.viewList, freq_save=self.step_counter, is_act=is_act, is_end=is_end,
+            #                          stage=task_stage)
+            #     self.skip_repetition = self.step_counter + 1
             # print("self.step_counter: ", self.step_counter)
             self.step_simulation()
 
@@ -858,51 +851,20 @@ class VIMAEnvBase(gym.Env):
 
     def movep(self, pose, speed=0.01, meetParaOfMovej=None):
         """Move UR5 to target end effector pose."""
-        # print("pose：", pose)
         targj = self.solve_ik(pose)
-        # print("targj：", targj)
-        # print("pose for control:", list(pose[0]), list(pose[1]))
-        # print("------------")
-        # print("ee_fixed_joint",  p.getJointState(self.ur5, 8, physicsClientId=self.client_id))
-        # print("Joint info:\n", [p.getJointInfo(self.ur5, i,physicsClientId=self.client_id)[0] for i in range(p.getNumJoints(self.ur5))])
-        # print("Joint info:\n",
-        #       [p.getJointInfo(self.ur5, i, physicsClientId=self.client_id)[0] for i in range(p.getNumJoints(self.ur5))])
-        # print(p.getJointInfo(self.ur5, 8, physicsClientId=self.client_id))
-        # print(p.getJointState(self.ur5, 8, physicsClientId=self.client_id))
-        # print(p.getJointInfo(self.ur5, 9, physicsClientId=self.client_id))
-        # print(p.getJointState(self.ur5, 9, physicsClientId=self.client_id))
-        # print(p.getJointInfo(self.ur5, 10, physicsClientId=self.client_id))
-        # print(p.getJointState(self.ur5, 10, physicsClientId=self.client_id))
-        # print(p.getJointInfo(self.ur5, 11, physicsClientId=self.client_id))
-        # print(p.getJointState(self.ur5, 11, physicsClientId=self.client_id))
 
-        # print(p.getJointState(self.ur5, 7, physicsClientId=self.client_id))
+        self.all_actions.append([meetParaOfMovej[0]] + [i for i in pose[0]] + list(utils.quatXYZW_to_eulerXYZ(pose[1])) + [meetParaOfMovej[1]])
+        # def view_image_save(self, episode, viewList, freq_save, is_end, is_act, stage):
+        if (self.step_counter + 1) % 10 == 0 and meetParaOfMovej[-1]!="control":
+            self.view_image_save(self.episode_counter, pose, viewList=self.viewList, freq_save=self.step_counter, is_act=meetParaOfMovej[0], is_end=meetParaOfMovej[1],
+                                         stage=meetParaOfMovej[2])
 
-        # print("calculateInverseDynamics: ", p.calculateInverseDynamics(currj))
-        # print("self.joints: ", self.joints)  # [2, 3, 4, 5, 6, 7]
-
-
-
-        # info = p.getLinkState(3, 0, computeLinkVelocity=1, computeForwardKinematics=1, physicsClientId=self.client_id)
-        # info = p.getLinkState(4, 0, computeLinkVelocity=1, computeForwardKinematics=1, physicsClientId=self.client_id)
-        # ret_name = ["position_linkcom_world","world_rotation_linkcom","position_linkcom_frame","frame_rotation_linkcom","position_frame_world","world_rotation_frame","linearVelocity_linkcom_world","angularVelocity_linkcom_world"]
-        # for k,v in zip(ret_name, info):
-        #     if len(v)==4:
-        #         print(k, [i - j for i, j in zip(list(pose[1]), list(v))])
-        #         print(k, v)
-
-        # info = list(info)[:2]  # 只保留坐标与转角
-        # info = [list(info)[0]] + [list(info)[3]]
-        # print(info)
-
-        # print("pose for save:", list(info[0]), list(info[1]))
-        # print("diff of both pos", [i-j for i,j in zip(list(pose[0]),list(info[0]))])
-        # print("diff of both dir", [i - j for i, j in zip(list(pose[1]), list(info[1]))])
-        # speed = 0.01
-        if not meetParaOfMovej:
-            return self.movej(targj, speed)
-        else:
-            return self.movej(targj, speed, is_act=meetParaOfMovej[0], is_end=meetParaOfMovej[1], task_stage=meetParaOfMovej[2])
+        if self.step_counter%10==0 and meetParaOfMovej[-1]!="control":
+            frontPath = "/Users/liushaofan/code/VIMA"
+            np.save(
+                file=frontPath + r"/save_data/%s/traj_%d/action_all.npy" % (self.task_name, self.episode_counter),
+                arr=self.all_actions)
+        return self.movej(targj, speed, is_act=meetParaOfMovej[0], is_end=meetParaOfMovej[1], task_stage=meetParaOfMovej[2])
 
     def solve_ik(self, pose):
         """Calculate joint configuration with inverse kinematics."""
@@ -960,7 +922,7 @@ class VIMAEnvBase(gym.Env):
 
         return view_matrix, projection_matrix
 
-    def view_image_save(self, episode, viewList, freq_save, is_end, is_act, stage):
+    def view_image_save(self, episode, pose, viewList, freq_save, is_end, is_act, stage):
         '''
         Args:
             episode:
@@ -1018,4 +980,5 @@ class VIMAEnvBase(gym.Env):
         if not os.path.exists(frontPath+"/save_data/%s/traj_%d/action/" % (self.task_name,episode)):
             os.makedirs(frontPath+
             r"/save_data/%s/traj_%d/action/" % (self.task_name,episode))
-        np.save(file=frontPath+r"/save_data/%s/traj_%d/action/%s_%d.npy" % (self.task_name,episode, stage, freq_save), arr=info)
+        self.all_actions.append([is_act]+[i for i in pose[0]]+list(utils.quatXYZW_to_eulerXYZ(pose[1])) +[is_end])
+        # np.save(file=frontPath+r"/save_data/%s/traj_%d/action/%s_%d.npy" % (self.task_name,episode, stage, freq_save), arr=[is_act]+[i for i in pose[0]]+list(utils.quatXYZW_to_eulerXYZ(pose[1])) +[is_end])

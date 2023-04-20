@@ -211,7 +211,7 @@ class PickPlace:
 
         info = p.getLinkState(3, 0)
         info = list(info)[0]  # 只保留坐标与转角
-        timeout,_,_ = self.micro_move(((info[0], info[1], 0.32),(0,0,0,1)), end_pose=prepick_pose, type=0, threshold=0.1, movep=movep, ee=ee,
+        timeout,_,_ = self.micro_move(((info[0], info[1], 0.32),(0,0,0,1)), end_pose=prepick_pose, type=0, threshold=0.01, movep=movep, ee=ee,
                         is_act=0, is_end=0, stage="move_to_pick")
 
         # Move towards pick pose until contact is detected.
@@ -221,7 +221,7 @@ class PickPlace:
         while not ee.detect_contact():  # and target_pose[2] > 0:
             # time.sleep(0.02)
             targ_pose = utils.multiply(targ_pose, delta)
-            timeout |= movep(targ_pose, self.speed, [episode,0,0,"down_to_pick"])
+            timeout |= movep(targ_pose, self.speed, [0,0,"down_to_pick"])
             if timeout:
                 return True, False
 
@@ -234,7 +234,6 @@ class PickPlace:
         # 如果确实吸起来了
         if pick_success:
             preplace_to_place = ((0, 0, self.height), (0, 0, 0, 1))
-            postplace_to_place = ((0, 0, 0.32), (0, 0, 0, 1))
             preplace_pose = utils.multiply(place_pose, preplace_to_place)
             targ_pose = preplace_pose
 
@@ -255,7 +254,7 @@ class PickPlace:
             timeout,_, after_totate = self.micro_move(beg_pose=beg_pose, end_pose=targ_pose, type=1, threshold=0.01, movep=movep, ee=ee,
                                          is_act=1, is_end=0, stage="rotate")
             # 平移到目的地
-            timeout, _, after_move_to_put = self.micro_move(beg_pose=after_totate, end_pose=preplace_pose, delta=horizonal_delta, type=0, threshold=0.1, movep=movep, ee=ee,
+            timeout, _, after_move_to_put = self.micro_move(beg_pose=after_totate, end_pose=preplace_pose, delta=horizonal_delta, type=0, threshold=0.01, movep=movep, ee=ee,
                                          is_act=1, is_end=0, stage="move_to_put")
 
             # 平移到目的地
@@ -264,7 +263,7 @@ class PickPlace:
             targ_pose = preplace_pose
             while not ee.detect_contact():
                 targ_pose = utils.multiply(targ_pose, delta)
-                timeout |= movep(targ_pose, self.speed, [episode, 1, 0, "down_to_put"])
+                timeout |= movep(targ_pose, self.speed, [1, 0, "down_to_put"])
                 if timeout:
                     return True, False
 
@@ -279,7 +278,6 @@ class PickPlace:
             timeout |= movep(prepick_pose, self.speed, [episode, 1, 1, "%s_goal_state" % (task_name)])
 
         return timeout, pick_success
-
 
     def micro_move(self, beg_pose, end_pose, delta=None, type=0, threshold=0.01, movep=None, ee=None, timeout=False, is_act=0, is_end=0, stage="unspecifi"):
         '''
@@ -303,7 +301,6 @@ class PickPlace:
             targ_euler = utils.quatXYZW_to_eulerXYZ(end_pose[1])
             rotation_delta = (np.float32([0, 0, 0]), utils.eulerXYZ_to_quatXYZW(((targ_euler[0] - postpick_euler[
                 0]) / 100, (targ_euler[1] - postpick_euler[1]) / 100, (targ_euler[2] - postpick_euler[2]) / 100)))
-
             horizonal_delta = (np.float32([(i - j) / 100 for i, j in zip(end_pose[0], beg_pose[0])]), (0, 0, 0, 1))
 
             delta = horizonal_delta if type==0 else rotation_delta
@@ -419,16 +416,19 @@ class MicroPickPlace:
         Returns:
           timeout: robot movement timed out if True.
         """
-        # pose0 = []
-        # pose1 = []
-        #
-        # pick_pose = (np.array([pose0[0][0], pose0[0][1], 0]), pose0[1])
-        # place_pose = (np.array([pose1[0][0], pose1[0][1], 0]), pose1[1])
+        is_open = micro_action[0]
+        pick_success = ee.check_grasp()
+        if is_open==1:
+            ee.activate()
+        if is_open == 0 and pick_success:
+            ee.release()
 
-        target_pose = (np.array([i for i in micro_action[:3]]), np.array([i for i in micro_action[3:]]))
+        micro_action = micro_action[1:]
+        target_pose = (np.array([i for i in micro_action[:3]]), utils.eulerXYZ_to_quatXYZW([i for i in micro_action[3:]]))
+        # print(target_pose)
         prepick_to_pick = ((0, 0, 0.32), (0, 0, 0, 1))
         # target_pose = utils.multiply(target_pose, prepick_to_pick)
-        timeout = movep(target_pose, self.speed, [episode, 0, 0, "move_to_pick"])
+        timeout = movep(target_pose, self.speed, [0, 0, "control"])
 
 
         # # Execute picking primitive.
