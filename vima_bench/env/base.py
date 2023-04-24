@@ -811,7 +811,8 @@ class VIMAEnvBase(gym.Env):
         timeout = 500
         speed = 0.01
         while (time.time() - t0) < timeout:
-            # time.sleep(0.1)
+            # if task_stage!="control":
+            #     time.sleep(0.02)
             currj = [
                 p.getJointState(self.ur5, i, physicsClientId=self.client_id)[0]
                 for i in self.joints
@@ -855,15 +856,15 @@ class VIMAEnvBase(gym.Env):
 
         self.all_actions.append([meetParaOfMovej[0]] + [i for i in pose[0]] + list(utils.quatXYZW_to_eulerXYZ(pose[1])) + [meetParaOfMovej[1]])
         # def view_image_save(self, episode, viewList, freq_save, is_end, is_act, stage):
-        if (self.step_counter + 1) % 10 == 0 and meetParaOfMovej[-1]!="control":
+        if (self.step_counter + 1) % 100 == 0 and meetParaOfMovej[-1]!="control":
             self.view_image_save(self.episode_counter, pose, viewList=self.viewList, freq_save=self.step_counter, is_act=meetParaOfMovej[0], is_end=meetParaOfMovej[1],
                                          stage=meetParaOfMovej[2])
 
-        if self.step_counter%10==0 and meetParaOfMovej[-1]!="control":
-            frontPath = "/Users/liushaofan/code/VIMA"
-            np.save(
-                file=frontPath + r"/save_data/%s/traj_%d/action_all.npy" % (self.task_name, self.episode_counter),
-                arr=self.all_actions)
+        # if self.step_counter%10==0 and meetParaOfMovej[-1]!="control":
+        #     frontPath = "/Users/liushaofan/code/VIMA"
+        #     np.save(
+        #         file=frontPath + r"/save_data/%s/traj_%d/action_all.npy" % (self.task_name, self.episode_counter),
+        #         arr=self.all_actions)
         return self.movej(targj, speed, is_act=meetParaOfMovej[0], is_end=meetParaOfMovej[1], task_stage=meetParaOfMovej[2])
 
     def solve_ik(self, pose):

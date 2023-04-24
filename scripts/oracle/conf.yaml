@@ -1,6 +1,6 @@
 defaults:
   - _self_  # all below configs will override this conf.yaml
-  - task: follow_motion
+  - task: visual_manipulation
 
 vima_bench_kwargs:
   task_name: ???
