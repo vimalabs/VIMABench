@@ -1,12 +1,12 @@
 defaults:
   - _self_  # all below configs will override this conf.yaml
-  - task: visual_manipulation
+  - task: same_texture
 
 vima_bench_kwargs:
   task_name: ???
   task_kwargs: ???
   modalities: ["rgb", "segm"]
-  seed: 42
+  seed: 420
   debug: false
   display_debug_window: true
   render_prompt: true

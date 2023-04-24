@@ -856,7 +856,7 @@ class VIMAEnvBase(gym.Env):
 
         self.all_actions.append([meetParaOfMovej[0]] + [i for i in pose[0]] + list(utils.quatXYZW_to_eulerXYZ(pose[1])) + [meetParaOfMovej[1]])
         # def view_image_save(self, episode, viewList, freq_save, is_end, is_act, stage):
-        if (self.step_counter + 1) % 100 == 0 and meetParaOfMovej[-1]!="control":
+        if (self.step_counter + 1) % 30 == 0 and meetParaOfMovej[-1]!="control":
             self.view_image_save(self.episode_counter, pose, viewList=self.viewList, freq_save=self.step_counter, is_act=meetParaOfMovej[0], is_end=meetParaOfMovej[1],
                                          stage=meetParaOfMovej[2])
 
@@ -982,4 +982,4 @@ class VIMAEnvBase(gym.Env):
             os.makedirs(frontPath+
             r"/save_data/%s/traj_%d/action/" % (self.task_name,episode))
         self.all_actions.append([is_act]+[i for i in pose[0]]+list(utils.quatXYZW_to_eulerXYZ(pose[1])) +[is_end])
-        # np.save(file=frontPath+r"/save_data/%s/traj_%d/action/%s_%d.npy" % (self.task_name,episode, stage, freq_save), arr=[is_act]+[i for i in pose[0]]+list(utils.quatXYZW_to_eulerXYZ(pose[1])) +[is_end])
+        np.save(file=frontPath+r"/save_data/%s/traj_%d/action/%s_%d.npy" % (self.task_name,episode, stage, freq_save), arr=[is_act]+[i for i in pose[0]]+list(utils.quatXYZW_to_eulerXYZ(pose[1])) +[is_end])

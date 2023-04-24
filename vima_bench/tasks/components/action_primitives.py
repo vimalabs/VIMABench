@@ -253,15 +253,18 @@ class PickPlace:
             # 旋转到目标位置
             # print(rotation_delta)
             pos_diff = np.max([abs(i - j) for i, j in zip(targ_euler, postpick_euler)])
-            print(pos_diff)
+            # print(pos_diff)
             if pos_diff > 0.01:
-                timeout,_, after_totate = self.micro_move(beg_pose=beg_pose, end_pose=targ_pose, type=1, threshold=0.01, movep=movep, ee=ee,
+                # print("beg_pose: ", beg_pose)
+                # print("targ_pose: ", targ_pose)
+                timeout,_, after_totate = self.micro_move(beg_pose=beg_pose, end_pose=targ_pose, type=1, threshold=0.05, movep=movep, ee=ee,
                                              is_act=1, is_end=0, stage="rotate")
+                # print("after_rotate: ", after_totate)
+                beg_pose = after_totate
             # 平移到目的地
-            timeout, _, after_move_to_put = self.micro_move(beg_pose=postpick_pose, end_pose=preplace_pose, delta=horizonal_delta, type=0, threshold=0.01, movep=movep, ee=ee,
+            timeout, _, after_move_to_put = self.micro_move(beg_pose=beg_pose, end_pose=targ_pose, delta=None, type=0, threshold=0.01, movep=movep, ee=ee,
                                          is_act=1, is_end=0, stage="move_to_put")
-
-            # 平移到目的地
+            # print("after_move_to_put: ", after_move_to_put)
 
             # 下降到地面
             targ_pose = preplace_pose
@@ -304,21 +307,41 @@ class PickPlace:
             postpick_euler = utils.quatXYZW_to_eulerXYZ(beg_pose[1])
             targ_euler = utils.quatXYZW_to_eulerXYZ(end_pose[1])
             rotation_delta = (np.float32([0, 0, 0]), utils.eulerXYZ_to_quatXYZW(((targ_euler[0] - postpick_euler[
-                0]) / 1000, (targ_euler[1] - postpick_euler[1]) / 1000, (targ_euler[2] - postpick_euler[2]) / 1000)))
-            horizonal_delta = (np.float32([(i - j) / 1000 for i, j in zip(end_pose[0], beg_pose[0])]), (0, 0, 0, 1))
+                0]) / 200, (targ_euler[1] - postpick_euler[1]) / 200, (targ_euler[2] - postpick_euler[2]) / 200)))
+
+            pos = [i - j for i, j in zip(end_pose[0], beg_pose[0])]
+            sum_p = np.average(sum([abs(i)/0.01 for i in pos]))
+            pos = [i/sum_p for i in pos]
+            horizonal_delta = (np.float32(pos), (0, 0, 0, 1))
 
             delta = horizonal_delta if type==0 else rotation_delta
 
         pos_diff = np.max([abs(i - j) for i, j in zip(beg_pose[type], end_pose[type])])
 
+        # if stage == 'move_to_put':
+        #     print(beg_pose)
+        #     print(end_pose)
+        #     horizonal_delta = (np.float32([(i - j)  for i, j in zip(end_pose[0], beg_pose[0])]), (0, 0, 0, 1))
+        #     print("delta: ",delta[0][0]*200,delta[0][1]*200)
+        #     print(horizonal_delta)
+
+        run_step = 0
         while pos_diff > threshold:
+            run_step+=1
             last_diff = pos_diff
             # print("stage:%s"%(stage))
             if type==0:
-                beg_pose = utils.multiply(beg_pose, delta)
+                # if stage == 'move_to_put':
+                #     print("before", beg_pose, delta[0])
+                # beg_pose = utils.multiply(beg_pose, delta)
+                beg_pose = (tuple([i+j for i,j in zip(beg_pose[0],delta[0])]) ,beg_pose[1])
+                # if stage == 'move_to_put':
+                #     print("after", beg_pose, delta[0])
+                # beg_pose = ((v+delta[i] for i,v in enumerate(beg_pose[0])), beg_pose[1])
             elif type==1:
                 beg_pose = utils.multiply(beg_pose, delta)
-            timeout |= movep(beg_pose, self.speed, [is_act, is_end, stage])
+            # print('task stage:%s, '%(stage) , beg_pose)
+            timeout |= movep(beg_pose, speed=0.02, meetParaOfMovej=[is_act, is_end, stage])
             pos_diff = np.max([abs(i - j) for i, j in zip(beg_pose[type], end_pose[type])])
             if type ==1:
                 pos_diff_rotate = np.mean([i + j for i, j in zip(beg_pose[type], end_pose[type])])
@@ -327,8 +350,12 @@ class PickPlace:
                 print("Wronging in stage: %s!!!"%(stage))
                 return timeout, True, beg_pose
 
+            # horizonal_delta = (np.float32([(i - j) / (200-min(run_step,100)) for i, j in zip(end_pose[0], beg_pose[0])]), (0, 0, 0, 1))
+            # delta = horizonal_delta if type==0 else delta
+
             if timeout:
-                return True, beg_pose
+                pick_success = ee.check_grasp()
+                return True, pick_success, beg_pose
 
         pick_success = ee.check_grasp()
         return timeout, pick_success, beg_pose
