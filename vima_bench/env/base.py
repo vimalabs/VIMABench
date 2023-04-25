@@ -21,6 +21,23 @@ UR5_URDF_PATH = "ur5/ur5.urdf"
 UR5_WORKSPACE_URDF_PATH = "ur5/workspace.urdf"
 PLANE_URDF_PATH = "plane/plane.urdf"
 
+def get_cam_config(position, rotation, intrinsics):
+    image_size = (300, 300)
+
+    front_intrinsics = (64e4 // 1.80, 0, 320.0, 0, 63e4, 240.0, 0, 0, 1)
+    top_intrinsics = (64e4 // 2.55, 0, 320.0, 0, 63e4, 240.0, 0, 0, 1)
+
+    CONFIG = {
+        "image_size": image_size,
+        "intrinsics": front_intrinsics,
+        "position": position,
+        "rotation": rotation,
+        # "zrange": (999.7, 1001.0),
+        "zrange": (900, 10001.0),
+        "noise": False,
+    }
+
+    return CONFIG
 
 class VIMAEnvBase(gym.Env):
     pix_size = 0.003125
@@ -265,7 +282,7 @@ class VIMAEnvBase(gym.Env):
         """
         return self.prompt, self.prompt_assets
 
-    def reset(self, task_name="unknow_task", workspace_only=False):
+    def reset(self, task_name="unknow", pos=None, rot=None, workspace_only=False):
         """Performs common reset functionality for all supported tasks."""
         if not self.task:
             raise ValueError(
@@ -407,7 +424,7 @@ class VIMAEnvBase(gym.Env):
 
         self.meta_info["obj_id_to_info"] = self.obj_id_reverse_mapping
 
-        obs, _, _, _ = self.step()
+        obs, _, _, _ = self.step(task_name=task_name, pos=pos, rot=rot)
 
         # print("try to print joint info:\n")
 
@@ -491,7 +508,7 @@ class VIMAEnvBase(gym.Env):
 
         return obs, reward, done, self._get_info()
 
-    def step(self, action=None, skip_oracle=True, episode=0, task_name="notFindName!"):
+    def step(self, action=None, skip_oracle=True, episode=0, task_name="unknown", pos=None, rot=None):
         """Execute action with specified primitive.
 
         Args:
@@ -554,7 +571,7 @@ class VIMAEnvBase(gym.Env):
             raise NotImplementedError()
 
         done = result_tuple.success or result_tuple.failure
-        obs = self._get_obs()
+        obs = self._get_obs(task_name=task_name, pos=pos, rot=rot)
 
         return obs, reward, done, self._get_info()
 
@@ -772,14 +789,21 @@ class VIMAEnvBase(gym.Env):
 
         return color, depth, segm
 
-    def _get_obs(self):
+    def _get_obs(self, task_name = "unknown", pos=None, rot=None):
         obs = {f"{modality}": {} for modality in self.modalities}
         # print("self.agent_cams:\n ", self.agent_cams)
-        for view, config in self.agent_cams.items():
+        if task_name.endswith("test"):
+            config = get_cam_config(pos, rot)
             color, depth, segm = self.render_camera(config)
             render_result = {"rgb": color, "depth": depth, "segm": segm}
             for modality in self.modalities:
-                obs[modality][view] = render_result[modality]
+                obs[modality]['customized_view'] = render_result[modality]
+        else:
+            for view, config in self.agent_cams.items():
+                color, depth, segm = self.render_camera(config)
+                render_result = {"rgb": color, "depth": depth, "segm": segm}
+                for modality in self.modalities:
+                    obs[modality][view] = render_result[modality]
 
         # add end effector into observation dict
         obs["ee"] = 0 if isinstance(self.ee, Suction) else 1
@@ -804,15 +828,12 @@ class VIMAEnvBase(gym.Env):
     # Robot Movement Functions
     # ---------------------------------------------------------------------------
 
-    def movej(self, targj, speed=0.01, timeout=50, is_act=0, is_end=0,task_stage="un_specified"):
+    def movej(self, targj, speed=0.01, timeout=50):
         """Move UR5 to target joint configuration."""
         t0 = time.time()
-        # print("timeout: ", timeout)
         timeout = 500
         speed = 0.01
         while (time.time() - t0) < timeout:
-            # if task_stage!="control":
-            #     time.sleep(0.02)
             currj = [
                 p.getJointState(self.ur5, i, physicsClientId=self.client_id)[0]
                 for i in self.joints
@@ -837,14 +858,6 @@ class VIMAEnvBase(gym.Env):
                 positionGains=gains,
                 physicsClientId=self.client_id,
             )
-            # self.step_counter += 1
-            # print(self.step_counter)
-
-            # if (self.step_counter + 1) % 10 == 0:
-            #     self.view_image_save(episode=self.episode_counter, viewList=self.viewList, freq_save=self.step_counter, is_act=is_act, is_end=is_end,
-            #                          stage=task_stage)
-            #     self.skip_repetition = self.step_counter + 1
-            # print("self.step_counter: ", self.step_counter)
             self.step_simulation()
 
         print(f"Warning: movej exceeded {timeout} second timeout. Skipping.")
@@ -855,7 +868,6 @@ class VIMAEnvBase(gym.Env):
         targj = self.solve_ik(pose)
 
         self.all_actions.append([meetParaOfMovej[0]] + [i for i in pose[0]] + list(utils.quatXYZW_to_eulerXYZ(pose[1])) + [meetParaOfMovej[1]])
-        # def view_image_save(self, episode, viewList, freq_save, is_end, is_act, stage):
         if (self.step_counter + 1) % 30 == 0 and meetParaOfMovej[-1]!="control":
             self.view_image_save(self.episode_counter, pose, viewList=self.viewList, freq_save=self.step_counter, is_act=meetParaOfMovej[0], is_end=meetParaOfMovej[1],
                                          stage=meetParaOfMovej[2])
@@ -865,7 +877,7 @@ class VIMAEnvBase(gym.Env):
         #     np.save(
         #         file=frontPath + r"/save_data/%s/traj_%d/action_all.npy" % (self.task_name, self.episode_counter),
         #         arr=self.all_actions)
-        return self.movej(targj, speed, is_act=meetParaOfMovej[0], is_end=meetParaOfMovej[1], task_stage=meetParaOfMovej[2])
+        return self.movej(targj, speed)
 
     def solve_ik(self, pose):
         """Calculate joint configuration with inverse kinematics."""

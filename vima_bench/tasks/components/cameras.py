@@ -6,6 +6,7 @@ import pybullet as p
 
 __all__ = [
     "get_agent_cam_config",
+    "get_cam_config",
     "Oracle",
 ]
 
@@ -35,10 +36,8 @@ def get_agent_cam_config(image_size: tuple[int, int] = (128, 256)):
         "top": NearPerfectCamera128x256.CONFIG[1],
     }
 
-
 class NearPerfectCamera128x256(object):
     """Top-down noiseless image used only by the oracle demonstrator."""
-
     # Near-orthographic projection.
     image_size = (128, 256)
     front_intrinsics = (64e4 // 1.80, 0, 320.0, 0, 63e4, 240.0, 0, 0, 1)

@@ -13,7 +13,7 @@ import gym
 import numpy as np
 import pybullet as p
 
-from ..components import PickPlace, MicroPickPlace, Oracle, get_agent_cam_config, Suction
+from ..components import PickPlace, MicroPickPlace, Oracle, get_agent_cam_config, Suction, get_cam_config
 from ..components.encyclopedia.definitions import SizeRange, ObjEntry, TextureEntry
 from ..components.placeholders import Placeholder
 from ..utils import misc_utils as utils

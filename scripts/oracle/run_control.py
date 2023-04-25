@@ -25,12 +25,6 @@ def main(cfg):
 
         for traj in range(task.oracle_max_steps):
             oracle_action = oracle_fn.act(obs)
-            # print("obs: ", obs)
-            # print("oracle_action:\n")
-            # print(oracle_action['pose0_position'])
-            # print(oracle_action['pose0_rotation'])
-            # print(oracle_action['pose1_position'])
-            # print(oracle_action['pose1_rotation'])
 
             oracle_action = {
                 k: np.clip(v, env.action_space[k].low, env.action_space[k].high) for k, v in oracle_action.items()
