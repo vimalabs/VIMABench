@@ -1,4 +1,5 @@
 # VIMA-Bench: Benchmark for Multimodal Robot Learning
+## ICML 2023
 <div align="center">
 
 [[Website]](https://vimalabs.github.io/)
@@ -15,7 +16,7 @@ ______________________________________________________________________
 </div>
 
 
-VIMA-Bench is a newly introduced task suite and benchmark for learning general robot manipulation with multimodal prompts. It features 17 representative meta-tasks with multimodal prompt templates, which can be procedurally instantiated into thousands of individual tasks by various combinations of textures and tabletop objects. It also establishes a 4-level protocol to evaluate progressively stronger generalization capabilities, from randomized object placement to novel tasks altogether. Finally, it provides a massive imitation dataset with 650K successful trajectories and multimodal prompts to learn general robot manipulation.
+VIMA-Bench is a newly introduced task suite and benchmark for learning general robot manipulation with multimodal prompts. It features 17 representative tasks with multimodal prompt templates, which can be procedurally instantiated into thousands of individual instances by various combinations of textures and tabletop objects. It also establishes a 4-level protocol to evaluate progressively stronger generalization capabilities, from randomized object placement to novel tasks altogether. Finally, it provides a massive imitation dataset with 650K successful trajectories and multimodal prompts to learn general robot manipulation.
 
 # Installation
 VIMA-Bench requires Python ≥ 3.9. We have tested on Ubuntu 20.04 and Mac OS X. Installing VIMA-Bench is as simple as:
@@ -38,7 +39,7 @@ prompt, prompt_assets = env.prompt, env.prompt_assets
 ```
 
 # Task Suite
-VIMA-Bench features 17 representative meta-tasks with multimodal prompt templates, which can be procedurally instantiated into thousands of individual tasks by various combinations of textures and tabletop objects.
+VIMA-Bench features 17 representative tasks with multimodal prompt templates, which can be procedurally instantiated into thousands of individual instances by various combinations of textures and tabletop objects.
 
 | Task Name                                         | How to Create                             | Demonstration                                     |
 |---------------------------------------------------|-------------------------------------------|---------------------------------------------------|
