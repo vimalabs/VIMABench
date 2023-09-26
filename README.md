@@ -27,7 +27,7 @@ pip install -e .
 ```
 
 # Getting Started
-VIMA-Bench provides a [Gym-style](https://www.gymlibrary.ml/) interface for developing robot agents conditioned on multimodal prompts that interact with the simulator in a loop. Here is a very simple code snippet to instantiate the task "Visual Manipulation" and query the corresponding prompt:
+VIMA-Bench provides a [Gym-style](https://www.gymlibrary.dev/) interface for developing robot agents conditioned on multimodal prompts that interact with the simulator in a loop. Here is a very simple code snippet to instantiate the task "Visual Manipulation" and query the corresponding prompt:
 
 ```python
 from vima_bench import make
